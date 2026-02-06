@@ -53,7 +53,7 @@ import { Client, Project } from '../../models';
             
             <ion-item *ngIf="client.budget">
               <ion-icon name="cash" slot="start" color="primary"></ion-icon>
-              <ion-label>Budget: ${{client.budget | number}}</ion-label>
+              <ion-label>Budget: {{client.budget | number}}</ion-label>
             </ion-item>
           </ion-list>
         </ion-card-content>

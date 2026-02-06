@@ -57,7 +57,7 @@ import { Client, Project, CompanyStats } from '../../models';
             <ion-card color="tertiary">
               <ion-card-content class="text-center">
                 <ion-icon name="cash" size="large"></ion-icon>
-                <h1>${{totalRevenue | number:'1.0-0'}}</h1>
+                <h1>{{totalRevenue | number:'1.0-0'}}</h1>
                 <p>Total Revenue</p>
               </ion-card-content>
             </ion-card>

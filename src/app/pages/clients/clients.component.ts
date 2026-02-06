@@ -57,7 +57,7 @@ import { Client, Project } from '../../models';
               </ion-col>
               <ion-col size="6" *ngIf="client.budget">
                 <ion-label class="text-small">
-                  <strong>Budget:</strong> ${{client.budget | number}}
+                  <strong>Budget:</strong> {{client.budget | number}}
                 </ion-label>
               </ion-col>
             </ion-row>

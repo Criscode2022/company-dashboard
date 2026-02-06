@@ -41,7 +41,7 @@ import { Project, Feature, Version, DailyProgress } from '../../models';
             </ion-col>
             <ion-col size="6" *ngIf="project.budget">
               <ion-label>
-                <strong>Budget:</strong> ${{project.budget | number}}
+                <strong>Budget:</strong> {{project.budget | number}}
               </ion-label>
             </ion-col>
           </ion-row>
