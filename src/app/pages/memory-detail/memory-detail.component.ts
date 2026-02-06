@@ -9,7 +9,7 @@ import { DailyMemory } from '../../models';
 @Component({
   selector: 'app-memory-detail',
   standalone: true,
-  imports: [CommonModule, IonicModule],
+  imports: [CommonModule, IonicModule, RouterModule],
   template: `
     <ion-header>
       <ion-toolbar color="primary">

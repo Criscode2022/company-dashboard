@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { IonicModule } from '@ionic/angular';
 import { RouterModule } from '@angular/router';
 import { DatabaseService } from '../../services/database.service';
-import { Client } from '../../models';
+import { Client, Project } from '../../models';
 
 @Component({
   selector: 'app-clients',
