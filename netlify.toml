@@ -10,3 +10,4 @@ NODE_VERSION = "22"
 from = "/*"
 to = "/index.html"
 status = 200
+
