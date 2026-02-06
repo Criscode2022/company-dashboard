@@ -130,10 +130,22 @@ export class ClientsComponent implements OnInit {
         budget: 15000,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
+      },
+      {
+        id: '3',
+        name: 'TaskFlow (Internal)',
+        contact_name: 'Cristian Damil',
+        email: 'cristian@company.local',
+        industry: 'technology',
+        status: 'active',
+        budget: 0,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
       }
     ];
     this.projectCounts.set('1', 1);
     this.projectCounts.set('2', 1);
+    this.projectCounts.set('3', 1);
   }
 
   getProjectCount(clientId: string): number {

@@ -122,6 +122,7 @@ export class DashboardComponent implements OnInit {
   stats?: CompanyStats;
   
   recentActivity = [
+    { icon: 'book', color: 'tertiary', title: 'New Project: TaskFlow', description: 'React learning app added', time: 'Just now' },
     { icon: 'rocket', color: 'success', title: 'GreenFork Deployed', description: 'Production deployment successful', time: '8 hours ago' },
     { icon: 'git-branch', color: 'primary', title: 'FitPulse Repository Created', description: 'New project initialized', time: '1 day ago' },
     { icon: 'business', color: 'tertiary', title: 'New Client: FitPulse Studio', description: 'Marcus Chen - $15K budget', time: '2 days ago' },
@@ -149,12 +150,14 @@ export class DashboardComponent implements OnInit {
   loadMockData() {
     this.clients = [
       { id: '1', name: 'GreenFork Bistro', industry: 'restaurant', status: 'active', created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
-      { id: '2', name: 'FitPulse Studio', industry: 'fitness', status: 'active', created_at: new Date().toISOString(), updated_at: new Date().toISOString() }
+      { id: '2', name: 'FitPulse Studio', industry: 'fitness', status: 'active', created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
+      { id: '3', name: 'TaskFlow (Internal)', industry: 'technology', status: 'active', created_at: new Date().toISOString(), updated_at: new Date().toISOString() }
     ];
     
     this.projects = [
       { id: '1', client_id: '1', name: 'GreenFork Scheduler', client_name: 'GreenFork Bistro', status: 'production', created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
-      { id: '2', client_id: '2', name: 'FitPulse Studio', client_name: 'FitPulse Studio', status: 'in_progress', created_at: new Date().toISOString(), updated_at: new Date().toISOString() }
+      { id: '2', client_id: '2', name: 'FitPulse Studio', client_name: 'FitPulse Studio', status: 'in_progress', created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
+      { id: '3', client_id: '3', name: 'TaskFlow', client_name: 'TaskFlow (Internal)', status: 'in_progress', created_at: new Date().toISOString(), updated_at: new Date().toISOString() }
     ];
   }
 
