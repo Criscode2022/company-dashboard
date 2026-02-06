@@ -1,10 +1,9 @@
 [build]
-command = "npm run build"
-publish = "dist/company-dashboard/browser"
-base = "company-dashboard"
+  command = "npm run build"
+  publish = "dist/company-dashboard/browser"
+  base = "company-dashboard"
 
 [[redirects]]
-from = "/*"
-to = "/index.html"
-status = 200
-
+  from = "/*"
+  to = "/index.html"
+  status = 200
