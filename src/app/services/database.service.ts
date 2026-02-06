@@ -48,7 +48,7 @@ export class DatabaseService {
   async getProjects(clientId?: string): Promise<Project[]> {
     const filters: Record<string, string> = {};
     if (clientId) {
-      filters.client_id = `eq.${clientId}`;
+      filters['client_id'] = `eq.${clientId}`;
     }
     
     return this.select<Project>('projects', {
@@ -75,13 +75,13 @@ export class DatabaseService {
   async getDailyProgress(projectId?: string, days: number = 30): Promise<DailyProgress[]> {
     const filters: Record<string, string> = {};
     if (projectId) {
-      filters.project_id = `eq.${projectId}`;
+      filters['project_id'] = `eq.${projectId}`;
     }
     
     // Get last N days
     const startDate = new Date();
     startDate.setDate(startDate.getDate() - days);
-    filters.date = `gte.${startDate.toISOString().split('T')[0]}`;
+    filters['date'] = `gte.${startDate.toISOString().split('T')[0]}`;
     
     return this.select<DailyProgress>('daily_progress', {
       order: 'date.desc',
