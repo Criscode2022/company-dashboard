@@ -1,11 +1,12 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { RouterModule } from '@angular/router';
 import { IonicModule } from '@ionic/angular';
 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [CommonModule, IonicModule],
+  imports: [CommonModule, RouterModule, IonicModule],
   template: `
     <ion-app>
       <ion-split-pane contentId="main-content">
