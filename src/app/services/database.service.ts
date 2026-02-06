@@ -18,6 +18,13 @@ export class DatabaseService {
       'Accept-Profile': this.schema,
     };
 
+    // Add API key for Neon Data API CORS
+    const apiKey = (environment as any).apiKey;
+    if (apiKey) {
+      headers['apikey'] = apiKey;
+      headers['Authorization'] = `Bearer ${apiKey}`;
+    }
+
     if (options?.write) {
       headers['Content-Profile'] = this.schema;
       headers['Prefer'] = 'return=representation';

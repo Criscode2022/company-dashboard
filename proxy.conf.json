@@ -1,0 +1,10 @@
+{
+  "/api": {
+    "target": "https://ep-wispy-lake-aii6akyc.c-4.us-east-1.aws.neon.tech",
+    "secure": true,
+    "changeOrigin": true,
+    "pathRewrite": {
+      "^/api": "/rest/v1"
+    }
+  }
+}
