@@ -1,6 +1,6 @@
-import { Injectable, inject } from '@angular/core';
-import { Router } from '@angular/router';
-import { authClient } from '../../lib/auth';
+import { Injectable, inject } from "@angular/core";
+import { Router } from "@angular/router";
+import { authClient } from "../../lib/auth";
 
 export interface AuthUser {
   id: string;
@@ -9,10 +9,10 @@ export interface AuthUser {
   role?: string;
 }
 
-const SESSION_KEY = 'company-dashboard-session';
+const SESSION_KEY = "company-dashboard-session";
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: "root",
 })
 export class AuthService {
   private router = inject(Router);
@@ -48,7 +48,7 @@ export class AuthService {
   setSession(user: AuthUser): void {
     const session = {
       user,
-      expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
+      expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
     };
     localStorage.setItem(SESSION_KEY, JSON.stringify(session));
   }
@@ -60,6 +60,6 @@ export class AuthService {
       // Ignore
     }
     localStorage.removeItem(SESSION_KEY);
-    this.router.navigate(['/login']);
+    this.router.navigate(["/login"]);
   }
 }
