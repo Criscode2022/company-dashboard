@@ -6,6 +6,10 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/login/login.page').then(m => m.LoginPage)
   },
   {
+    path: 'signup',
+    loadComponent: () => import('./pages/signup/signup.page').then(m => m.SignupPage)
+  },
+  {
     path: 'dashboard',
     loadComponent: () => import('./pages/dashboard/dashboard.component').then(m => m.DashboardComponent)
   },

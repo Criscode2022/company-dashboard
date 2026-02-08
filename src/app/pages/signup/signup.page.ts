@@ -11,17 +11,27 @@ import { addIcons } from 'ionicons';
 import { business } from 'ionicons/icons';
 
 @Component({
-  selector: 'app-login',
+  selector: 'app-signup',
   template: `
     <ion-content class="ion-padding">
-      <div class="login-container">
-        <div class="login-header">
+      <div class="signup-container">
+        <div class="signup-header">
           <ion-icon name="business" class="logo-icon"></ion-icon>
-          <h1>Company Dashboard</h1>
-          <p>Sign in to manage your projects</p>
+          <h1>Create Account</h1>
+          <p>Join your company dashboard</p>
         </div>
 
-        <div class="login-form">
+        <div class="signup-form">
+          <ion-item>
+            <ion-input
+              type="text"
+              placeholder="Your name"
+              [(ngModel)]="name"
+              label="Full Name"
+              labelPlacement="floating"
+            ></ion-input>
+          </ion-item>
+
           <ion-item>
             <ion-input
               type="email"
@@ -29,7 +39,6 @@ import { business } from 'ionicons/icons';
               [(ngModel)]="email"
               label="Email"
               labelPlacement="floating"
-              (keyup.enter)="login()"
             ></ion-input>
           </ion-item>
 
@@ -40,7 +49,16 @@ import { business } from 'ionicons/icons';
               [(ngModel)]="password"
               label="Password"
               labelPlacement="floating"
-              (keyup.enter)="login()"
+            ></ion-input>
+          </ion-item>
+
+          <ion-item>
+            <ion-input
+              type="password"
+              placeholder="Confirm password"
+              [(ngModel)]="confirmPassword"
+              label="Confirm Password"
+              labelPlacement="floating"
             ></ion-input>
           </ion-item>
 
@@ -50,18 +68,18 @@ import { business } from 'ionicons/icons';
 
           <ion-button 
             expand="block" 
-            (click)="login()" 
-            class="login-button" 
+            (click)="signup()" 
+            class="signup-button" 
             [disabled]="isLoading"
           >
             <ion-spinner *ngIf="isLoading" name="crescent"></ion-spinner>
-            <span *ngIf="!isLoading">Sign In</span>
+            <span *ngIf="!isLoading">Create Account</span>
           </ion-button>
 
-          <div class="signup-link">
-            <p>Don't have an account?</p>
-            <ion-button expand="block" fill="outline" routerLink="/signup">
-              Create Account
+          <div class="login-link">
+            <p>Already have an account?</p>
+            <ion-button expand="block" fill="outline" routerLink="/login">
+              Sign In
             </ion-button>
           </div>
         </div>
@@ -74,12 +92,12 @@ import { business } from 'ionicons/icons';
     IonContent, IonItem, IonInput, IonButton, IonText, IonSpinner, IonIcon
   ],
   styles: [`
-    .login-container {
+    .signup-container {
       max-width: 400px;
       margin: 0 auto;
-      padding-top: 60px;
+      padding-top: 40px;
     }
-    .login-header {
+    .signup-header {
       text-align: center;
       margin-bottom: 40px;
     }
@@ -87,11 +105,11 @@ import { business } from 'ionicons/icons';
       font-size: 64px;
       color: var(--ion-color-primary);
     }
-    .login-header h1 {
+    .signup-header h1 {
       margin: 16px 0 8px;
       font-size: 28px;
     }
-    .login-form {
+    .signup-form {
       display: flex;
       flex-direction: column;
       gap: 16px;
@@ -100,22 +118,24 @@ import { business } from 'ionicons/icons';
       text-align: center;
       margin: 8px 0;
     }
-    .signup-link {
+    .login-link {
       text-align: center;
       margin-top: 24px;
     }
-    .signup-link p {
+    .login-link p {
       margin-bottom: 8px;
       color: var(--ion-color-medium);
     }
   `]
 })
-export class LoginPage {
+export class SignupPage {
   private router = inject(Router);
   private authService = inject(AuthService);
 
+  name = '';
   email = '';
   password = '';
+  confirmPassword = '';
   errorMessage = '';
   isLoading = false;
 
@@ -123,20 +143,26 @@ export class LoginPage {
     addIcons({ business });
   }
 
-  async login() {
+  async signup() {
     this.errorMessage = '';
 
-    if (!this.email || !this.password) {
+    if (!this.name || !this.email || !this.password || !this.confirmPassword) {
       this.errorMessage = 'Please fill in all fields';
+      return;
+    }
+
+    if (this.password !== this.confirmPassword) {
+      this.errorMessage = 'Passwords do not match';
       return;
     }
 
     this.isLoading = true;
 
     try {
-      const { data, error } = await authClient.signIn.email({
+      const { data, error } = await authClient.signUp.email({
         email: this.email,
         password: this.password,
+        name: this.name,
       });
 
       if (error) {
@@ -145,16 +171,24 @@ export class LoginPage {
       }
 
       if (data?.user) {
-        const neonUser = data.user as any;
-        
-        this.authService.setSession({
-          id: neonUser?.id || data.user.id,
-          name: neonUser?.name,
-          email: neonUser?.email || this.email,
-          role: neonUser?.role,
+        // Auto-login after signup
+        const loginResult = await authClient.signIn.email({
+          email: this.email,
+          password: this.password,
         });
 
-        this.router.navigate(['/dashboard'], { replaceUrl: true });
+        if (loginResult.data?.user) {
+          const neonUser = loginResult.data.user as any;
+          
+          this.authService.setSession({
+            id: neonUser?.id || loginResult.data.user.id,
+            name: neonUser?.name || this.name,
+            email: neonUser?.email || this.email,
+            role: neonUser?.role,
+          });
+
+          this.router.navigate(['/dashboard'], { replaceUrl: true });
+        }
       }
     } catch (err: any) {
       this.errorMessage = err.message || 'Connection error. Please try again.';
@@ -164,12 +198,15 @@ export class LoginPage {
   }
 
   private getErrorMessage(error: any): string {
-    if (error.code === 'INVALID_CREDENTIALS' || error.message?.includes('credentials')) {
-      return 'Invalid email or password';
+    if (error.code === 'USER_ALREADY_EXISTS' || error.message?.includes('already exists')) {
+      return 'This email is already registered';
     }
-    if (error.code === 'USER_NOT_FOUND' || error.message?.includes('not found')) {
-      return 'User not found';
+    if (error.code === 'INVALID_EMAIL' || error.message?.includes('invalid email')) {
+      return 'Invalid email address';
     }
-    return error.message || 'Login failed';
+    if (error.code === 'WEAK_PASSWORD' || error.message?.includes('password')) {
+      return 'Password is too weak';
+    }
+    return error.message || 'Registration failed';
   }
 }

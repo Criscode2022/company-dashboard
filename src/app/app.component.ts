@@ -1,7 +1,8 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterModule } from '@angular/router';
+import { Router, RouterModule, NavigationEnd } from '@angular/router';
 import { IonicModule } from '@ionic/angular';
+import { filter } from 'rxjs/operators';
 
 @Component({
   selector: 'app-root',
@@ -9,8 +10,8 @@ import { IonicModule } from '@ionic/angular';
   imports: [CommonModule, RouterModule, IonicModule],
   template: `
     <ion-app>
-      <ion-split-pane contentId="main-content">
-        <ion-menu contentId="main-content" type="overlay">
+      <ion-split-pane contentId="main-content" [disabled]="!showMenu">
+        <ion-menu *ngIf="showMenu" contentId="main-content" type="overlay">
           <ion-header>
             <ion-toolbar color="primary">
               <ion-title>Company Dashboard</ion-title>
@@ -35,6 +36,10 @@ import { IonicModule } from '@ionic/angular';
                 <ion-icon name="trending-up" slot="start"></ion-icon>
                 <ion-label>Statistics</ion-label>
               </ion-item>
+              <ion-item (click)="logout()">
+                <ion-icon name="log-out" slot="start" color="danger"></ion-icon>
+                <ion-label>Logout</ion-label>
+              </ion-item>
             </ion-list>
           </ion-content>
         </ion-menu>
@@ -49,4 +54,20 @@ import { IonicModule } from '@ionic/angular';
     }
   `]
 })
-export class AppComponent {}
+export class AppComponent {
+  private router = inject(Router);
+  showMenu = false;
+
+  constructor() {
+    this.router.events.pipe(
+      filter(event => event instanceof NavigationEnd)
+    ).subscribe((event: any) => {
+      this.showMenu = !['/login', '/signup'].includes(event.url);
+    });
+  }
+
+  logout() {
+    localStorage.removeItem('company-dashboard-session');
+    this.router.navigate(['/login']);
+  }
+}

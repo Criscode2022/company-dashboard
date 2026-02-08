@@ -45,38 +45,12 @@ export class AuthService {
     return null;
   }
 
-  private saveFallbackSession(user: AuthUser): void {
+  setSession(user: AuthUser): void {
     const session = {
       user,
       expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
     };
     localStorage.setItem(SESSION_KEY, JSON.stringify(session));
-  }
-
-  async login(email: string, password: string): Promise<void> {
-    const { data, error } = await authClient.signIn.email({ email, password });
-    
-    if (error || !data?.user) {
-      throw new Error(error?.message || 'Login failed');
-    }
-
-    this.saveFallbackSession(data.user as AuthUser);
-    this.router.navigate(['/dashboard']);
-  }
-
-  async register(email: string, name: string, password: string): Promise<void> {
-    const { data, error } = await authClient.signUp.email({ 
-      email, 
-      password, 
-      name 
-    });
-    
-    if (error || !data?.user) {
-      throw new Error(error?.message || 'Registration failed');
-    }
-
-    this.saveFallbackSession(data.user as AuthUser);
-    this.router.navigate(['/dashboard']);
   }
 
   async logout(): Promise<void> {
