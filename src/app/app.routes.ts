@@ -26,6 +26,14 @@ export const routes: Routes = [
     path: 'calendar',
     loadComponent: () => import('./pages/calendar/calendar.page').then(m => m.CalendarPage)
   },
+  {
+    path: 'tags',
+    loadComponent: () => import('./pages/tags/tags.page').then(m => m.TagsPage)
+  },
+  {
+    path: 'activity',
+    loadComponent: () => import('./pages/activity/activity.page').then(m => m.ActivityPage)
+  },
   // Existing Routes
   {
     path: 'clients',

@@ -12,6 +12,8 @@ import {
   logOut,
   menuOutline,
   moon,
+  pricetag,
+  pulse,
   statsChart,
   sunny,
   trendingUp,
@@ -82,6 +84,26 @@ import { ThemeService } from "./services/theme.service";
               (click)="closeNav()"
             >
               <ion-icon name="calendar"></ion-icon> Calendar
+            </a>
+          </li>
+          
+          <li>
+            <a
+              routerLink="/tags"
+              routerLinkActive="active"
+              (click)="closeNav()"
+            >
+              <ion-icon name="pricetag"></ion-icon> Tags
+            </a>
+          </li>
+          
+          <li>
+            <a
+              routerLink="/activity"
+              routerLinkActive="active"
+              (click)="closeNav()"
+            >
+              <ion-icon name="pulse"></ion-icon> Activity
             </a>
           </li>
           
@@ -273,7 +295,7 @@ export class AppComponent {
   isDarkMode = false;
 
   constructor() {
-    addIcons({ statsChart, business, book, trendingUp, logOut, menuOutline, moon, sunny, list, grid, calendar, checkbox });
+    addIcons({ statsChart, business, book, trendingUp, logOut, menuOutline, moon, sunny, list, grid, calendar, checkbox, pricetag, pulse });
 
     this.router.events
       .pipe(filter((event) => event instanceof NavigationEnd))
