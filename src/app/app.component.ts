@@ -5,6 +5,10 @@ import { addIcons } from "ionicons";
 import {
   book,
   business,
+  calendar,
+  checkbox,
+  grid,
+  list,
   logOut,
   menuOutline,
   moon,
@@ -39,6 +43,8 @@ import { ThemeService } from "./services/theme.service";
       <nav class="sidebar" *ngIf="showMenu" [class.open]="isNavOpen">
         <div class="sidebar-header">Company Dashboard</div>
         <ul class="nav-list">
+          <!-- Main -->
+          <li class="nav-section">Main</li>
           <li>
             <a
               routerLink="/dashboard"
@@ -48,6 +54,39 @@ import { ThemeService } from "./services/theme.service";
               <ion-icon name="stats-chart"></ion-icon> Overview
             </a>
           </li>
+          
+          <!-- Task Management -->
+          <li class="nav-section">Tasks</li>
+          <li>
+            <a
+              routerLink="/tasks"
+              routerLinkActive="active"
+              (click)="closeNav()"
+            >
+              <ion-icon name="list"></ion-icon> Task List
+            </a>
+          </li>
+          <li>
+            <a
+              routerLink="/kanban"
+              routerLinkActive="active"
+              (click)="closeNav()"
+            >
+              <ion-icon name="grid"></ion-icon> Kanban Board
+            </a>
+          </li>
+          <li>
+            <a
+              routerLink="/calendar"
+              routerLinkActive="active"
+              (click)="closeNav()"
+            >
+              <ion-icon name="calendar"></ion-icon> Calendar
+            </a>
+          </li>
+          
+          <!-- Company -->
+          <li class="nav-section">Company</li>
           <li>
             <a
               routerLink="/clients"
@@ -75,6 +114,7 @@ import { ThemeService } from "./services/theme.service";
               <ion-icon name="trending-up"></ion-icon> Statistics
             </a>
           </li>
+          
           <li class="nav-spacer"></li>
           <li>
             <a (click)="toggleTheme()" class="theme-toggle">
@@ -144,6 +184,14 @@ import { ThemeService } from "./services/theme.service";
         flex-direction: column;
         flex: 1;
       }
+      .nav-section {
+        padding: 16px 20px 8px;
+        font-size: 11px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        color: rgba(255, 255, 255, 0.5);
+      }
       .nav-spacer {
         flex: 1;
       }
@@ -151,11 +199,12 @@ import { ThemeService } from "./services/theme.service";
         display: flex;
         align-items: center;
         gap: 12px;
-        padding: 14px 20px;
+        padding: 12px 20px;
         color: rgba(255, 255, 255, 0.85);
         text-decoration: none;
         cursor: pointer;
         transition: background 0.2s;
+        font-size: 14px;
       }
       .nav-list li a:hover {
         background: rgba(255, 255, 255, 0.15);
@@ -180,7 +229,7 @@ import { ThemeService } from "./services/theme.service";
         transition: background 0.3s ease;
       }
       ion-icon {
-        font-size: 20px;
+        font-size: 18px;
       }
       @media (max-width: 900px) {
         .app-layout {
@@ -224,7 +273,7 @@ export class AppComponent {
   isDarkMode = false;
 
   constructor() {
-    addIcons({ statsChart, business, book, trendingUp, logOut, menuOutline, moon, sunny });
+    addIcons({ statsChart, business, book, trendingUp, logOut, menuOutline, moon, sunny, list, grid, calendar, checkbox });
 
     this.router.events
       .pipe(filter((event) => event instanceof NavigationEnd))
@@ -235,7 +284,6 @@ export class AppComponent {
         }
       });
 
-    // Track theme changes
     this.themeService.theme$.subscribe(() => {
       this.isDarkMode = this.themeService.getResolvedTheme() === 'dark';
     });

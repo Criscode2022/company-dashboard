@@ -13,6 +13,20 @@ export const routes: Routes = [
     path: 'dashboard',
     loadComponent: () => import('./pages/dashboard/dashboard.component').then(m => m.DashboardComponent)
   },
+  // TaskFlow Routes
+  {
+    path: 'tasks',
+    loadComponent: () => import('./pages/tasks/tasks.page').then(m => m.TasksPage)
+  },
+  {
+    path: 'kanban',
+    loadComponent: () => import('./pages/kanban/kanban.page').then(m => m.KanbanPage)
+  },
+  {
+    path: 'calendar',
+    loadComponent: () => import('./pages/calendar/calendar.page').then(m => m.CalendarPage)
+  },
+  // Existing Routes
   {
     path: 'clients',
     loadComponent: () => import('./pages/clients/clients.component').then(m => m.ClientsComponent)
