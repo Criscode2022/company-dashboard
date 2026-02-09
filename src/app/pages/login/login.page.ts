@@ -8,6 +8,7 @@ import {
   IonIcon,
   IonInput,
   IonItem,
+  IonRouterLink,
   IonSpinner,
   IonText,
 } from "@ionic/angular/standalone";
@@ -86,6 +87,7 @@ import { AuthService } from "../../services/auth.service";
     IonText,
     IonSpinner,
     IonIcon,
+    IonRouterLink,
   ],
   styles: [
     `
