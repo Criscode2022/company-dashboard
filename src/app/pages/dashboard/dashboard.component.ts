@@ -26,6 +26,7 @@ import {
 } from "@ionic/angular/standalone";
 import { Client, CompanyStats, Project } from "../../models";
 import { DatabaseService } from "../../services/database.service";
+import { ActivityService, Activity } from "../../services/activity.service";
 
 @Component({
   selector: "app-dashboard",
@@ -111,7 +112,7 @@ import { DatabaseService } from "../../services/database.service";
         </ion-row>
       </ion-grid>
 
-      <!-- Recent Activity -->
+      <!-- Recent Activity - NOW FROM DATABASE -->
       <ion-card>
         <ion-card-header>
           <ion-card-title>Recent Activity</ion-card-title>
@@ -119,14 +120,20 @@ import { DatabaseService } from "../../services/database.service";
         <ion-list>
           <ion-item *ngFor="let activity of recentActivity">
             <ion-icon
-              [name]="activity.icon"
+              [name]="activity.icon || 'notifications'"
               slot="start"
-              [color]="activity.color"
+              [color]="activity.color || 'medium'"
             ></ion-icon>
             <ion-label>
-              <h3>{{ activity.title }}</h3>
-              <p>{{ activity.description }}</p>
-              <ion-note>{{ activity.time }}</ion-note>
+              <h3>{{ activity.action }}</h3>
+              <p *ngIf="activity.details">{{ activity.details }}</p>
+              <ion-note>{{ formatTime(activity.created_at) }}</ion-note>
+            </ion-label>
+          </ion-item>
+          
+          <ion-item *ngIf="recentActivity.length === 0">
+            <ion-label>
+              <p>No recent activity</p>
             </ion-label>
           </ion-item>
         </ion-list>
@@ -178,47 +185,12 @@ export class DashboardComponent implements OnInit {
   clients: Client[] = [];
   projects: Project[] = [];
   stats?: CompanyStats;
+  recentActivity: Activity[] = [];
 
-  // NOTE: Update this array daily with today's actual activities
-  recentActivity = [
-    {
-      icon: "business",
-      color: "success",
-      title: "New Client Secured: Riverside Vet",
-      description: "Dr. Sarah Chen - $18K budget, 3-week MVP",
-      time: "Today, 9:15 AM",
-    },
-    {
-      icon: "folder",
-      color: "primary",
-      title: "PawTrack Vet Project Launched",
-      description: "Repository created, database schema with 6 tables",
-      time: "Today, 10:00 AM",
-    },
-    {
-      icon: "checkmark-circle",
-      color: "tertiary",
-      title: "TaskFlow Features Merged",
-      description: "Tasks, Kanban, Calendar added to Dashboard",
-      time: "Today, 6:30 PM",
-    },
-    {
-      icon: "moon",
-      color: "primary",
-      title: "Dark Mode Added",
-      description: "Theme toggle in sidebar, CSS variables updated",
-      time: "Today, 7:00 PM",
-    },
-    {
-      icon: "cash",
-      color: "success",
-      title: "Revenue Pipeline: $93K",
-      description: "6 clients, 7 active projects",
-      time: "Updated today",
-    },
-  ];
-
-  constructor(private db: DatabaseService) {}
+  constructor(
+    private db: DatabaseService,
+    private activityService: ActivityService
+  ) {}
 
   async ngOnInit() {
     await this.loadData();
@@ -229,9 +201,10 @@ export class DashboardComponent implements OnInit {
       this.clients = await this.db.getClients();
       this.projects = await this.db.getProjects();
       this.stats = await this.db.getLatestStats();
+      // Fetch activities from database
+      this.recentActivity = await this.activityService.getRecentActivities(5);
     } catch (error) {
       console.error("Error loading dashboard data:", error);
-      // Use mock data if database not ready
       this.loadMockData();
     }
   }
@@ -293,6 +266,11 @@ export class DashboardComponent implements OnInit {
         updated_at: new Date().toISOString(),
       },
     ];
+  }
+
+  formatTime(timestamp: string | undefined): string {
+    if (!timestamp) return 'Unknown';
+    return this.activityService.formatTime(timestamp);
   }
 
   get productionCount(): number {
