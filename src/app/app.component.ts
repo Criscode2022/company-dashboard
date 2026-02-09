@@ -1,228 +1,291 @@
-import { CommonModule } from "@angular/common";
-import { Component, CUSTOM_ELEMENTS_SCHEMA, inject } from "@angular/core";
-import { NavigationEnd, Router, RouterModule } from "@angular/router";
-import { addIcons } from "ionicons";
-import {
-  book,
-  business,
-  logOut,
-  menuOutline,
-  statsChart,
-  trendingUp,
-} from "ionicons/icons";
-import { filter } from "rxjs/operators";
+import { Component, inject } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { Router, RouterModule, NavigationEnd } from '@angular/router';
+import { IonicModule } from '@ionic/angular';
+import { filter } from 'rxjs/operators';
+import { ThemeService } from './services/theme.service';
+import { AuthService } from './services/auth.service';
+import { addIcons } from 'ionicons';
+import { 
+  statsChart, business, book, trendingUp, logOut, moon, sunny, 
+  menuOutline, closeOutline
+} from 'ionicons/icons';
 
 @Component({
-  selector: "app-root",
+  selector: 'app-root',
   standalone: true,
-  imports: [CommonModule, RouterModule],
-  schemas: [CUSTOM_ELEMENTS_SCHEMA],
+  imports: [CommonModule, RouterModule, IonicModule],
   template: `
-    <div class="app-layout">
-      <button
-        *ngIf="showMenu"
-        class="nav-toggle"
-        type="button"
-        (click)="toggleNav()"
-        aria-label="Toggle navigation"
-      >
-        <ion-icon name="menu-outline"></ion-icon>
-      </button>
-      <div
-        *ngIf="showMenu && isNavOpen"
-        class="backdrop"
-        (click)="closeNav()"
-      ></div>
-      <nav class="sidebar" *ngIf="showMenu" [class.open]="isNavOpen">
-        <div class="sidebar-header">Company Dashboard</div>
-        <ul class="nav-list">
-          <li>
-            <a
-              routerLink="/dashboard"
-              routerLinkActive="active"
-              (click)="closeNav()"
-            >
-              <ion-icon name="stats-chart"></ion-icon> Overview
-            </a>
-          </li>
-          <li>
-            <a
-              routerLink="/clients"
-              routerLinkActive="active"
-              (click)="closeNav()"
-            >
-              <ion-icon name="business"></ion-icon> Clients & Projects
-            </a>
-          </li>
-          <li>
-            <a
-              routerLink="/memory"
-              routerLinkActive="active"
-              (click)="closeNav()"
-            >
-              <ion-icon name="book"></ion-icon> Daily Memory
-            </a>
-          </li>
-          <li>
-            <a
-              routerLink="/stats"
-              routerLinkActive="active"
-              (click)="closeNav()"
-            >
-              <ion-icon name="trending-up"></ion-icon> Statistics
-            </a>
-          </li>
-          <li>
-            <a (click)="logout()" class="logout">
-              <ion-icon name="log-out"></ion-icon> Logout
-            </a>
-          </li>
-        </ul>
-      </nav>
-      <main class="main-content">
-        <router-outlet></router-outlet>
-      </main>
-    </div>
+    <ion-app>
+      <ion-split-pane contentId="main-content" [disabled]="!showMenu">
+        <ion-menu *ngIf="showMenu" contentId="main-content" type="overlay" class="sidebar">
+          <ion-header class="sidebar-header">
+            <ion-toolbar
+              <div class="logo"
+                <span class="logo-icon">📊</span>
+                <span class="logo-text">Dashboard</span>
+              </div>
+            </ion-toolbar>
+          </ion-header>
+          
+          <ion-content class="sidebar-content">
+            <ion-list lines="none">
+              <ion-list-header>Menu</ion-list-header>
+              
+              <ion-item 
+                routerLink="/dashboard" 
+                routerLinkActive="selected"
+                (click)="closeMenu()"
+              >
+                <ion-icon name="stats-chart" slot="start"></ion-icon>
+                <ion-label>Overview</ion-label>
+              </ion-item>
+              
+              <ion-item 
+                routerLink="/clients" 
+                routerLinkActive="selected"
+                (click)="closeMenu()"
+              >
+                <ion-icon name="business" slot="start"></ion-icon>
+                <ion-label>Clients & Projects</ion-label>
+              </ion-item>
+              
+              <ion-item 
+                routerLink="/memory" 
+                routerLinkActive="selected"
+                (click)="closeMenu()"
+              >
+                <ion-icon name="book" slot="start"></ion-icon>
+                <ion-label>Daily Memory</ion-label>
+              </ion-item>
+              
+              <ion-item 
+                routerLink="/stats" 
+                routerLinkActive="selected"
+                (click)="closeMenu()"
+              >
+                <ion-icon name="trending-up" slot="start"></ion-icon>
+                <ion-label>Statistics</ion-label>
+              </ion-item>
+            </ion-list>
+            
+            <div class="sidebar-footer">
+              <ion-button fill="clear" (click)="toggleTheme()" class="theme-toggle"
+                <ion-icon [name]="isDarkMode ? 'sunny' : 'moon'" slot="start"></ion-icon>
+                {{ isDarkMode ? 'Light Mode' : 'Dark Mode' }}
+              </ion-button>
+              
+              <ion-button fill="clear" (click)="logout()" color="danger" class="logout-btn"
+                <ion-icon name="log-out" slot="start"></ion-icon>
+                Logout
+              </ion-button>
+            </div>
+          </ion-content>
+        </ion-menu>
+        
+        <div class="main-content" id="main-content"
+          <ion-header *ngIf="showMenu" class="top-bar"
+            <ion-toolbar
+              <ion-buttons slot="start"
+                <ion-menu-button></ion-menu-button>
+              </ion-buttons>
+              <ion-title>{{ pageTitle }}</ion-title>
+              <ion-buttons slot="end"
+                <ion-button (click)="toggleTheme()"
+                  <ion-icon [name]="isDarkMode ? 'sunny' : 'moon'"></ion-icon>
+                </ion-button>
+              </ion-buttons>
+            </ion-toolbar>
+          </ion-header>
+          
+          <ion-router-outlet></ion-router-outlet>
+        </div>
+      </ion-split-pane>
+    </ion-app>
   `,
-  styles: [
-    `
-      .app-layout {
-        display: flex;
-        height: 100vh;
-        width: 100vw;
-      }
-      .sidebar {
-        width: 260px;
-        min-width: 260px;
-        background: var(--ion-color-primary, #3880ff);
-        color: white;
-        display: flex;
-        flex-direction: column;
-        overflow-y: auto;
-      }
-      .nav-toggle {
-        display: none;
-        align-items: center;
-        justify-content: center;
-        width: 44px;
-        height: 44px;
-        border: none;
-        border-radius: 10px;
-        background: var(--ion-color-primary, #3880ff);
-        color: white;
-        position: fixed;
-        top: 12px;
-        left: 12px;
-        z-index: 1100;
-        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
-        cursor: pointer;
-      }
-      .backdrop {
-        display: none;
-      }
-      .sidebar-header {
-        padding: 20px 16px;
-        font-size: 1.2rem;
-        font-weight: 600;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.2);
-      }
-      .nav-list {
-        list-style: none;
-        margin: 0;
-        padding: 8px 0;
-      }
-      .nav-list li a {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        padding: 14px 20px;
-        color: rgba(255, 255, 255, 0.85);
-        text-decoration: none;
-        cursor: pointer;
-        transition: background 0.2s;
-      }
-      .nav-list li a:hover {
-        background: rgba(255, 255, 255, 0.15);
-      }
-      .nav-list li a.active {
-        background: rgba(255, 255, 255, 0.25);
-        color: white;
-        font-weight: 600;
-      }
-      .nav-list li a.logout {
-        color: #ff6b6b;
-      }
-      .main-content {
-        flex: 1;
-        overflow-y: auto;
-        background: #f4f5f8;
-      }
-      ion-icon {
-        font-size: 20px;
-      }
-      @media (max-width: 900px) {
-        .app-layout {
-          flex-direction: column;
-        }
-        .nav-toggle {
-          display: inline-flex;
-        }
-        .sidebar {
-          position: fixed;
-          top: 0;
-          bottom: 0;
-          left: 0;
-          transform: translateX(-100%);
-          transition: transform 0.25s ease;
-          z-index: 1000;
-        }
-        .sidebar.open {
-          transform: translateX(0);
-          padding-left: 56px;
-        }
-        .backdrop {
-          display: block;
-          position: fixed;
-          inset: 0;
-          background: rgba(15, 23, 42, 0.45);
-          z-index: 900;
-        }
-        .main-content {
-          padding-top: 64px;
-        }
-      }
-    `,
-  ],
+  styles: [`
+    :host {
+      --sidebar-width: 260px;
+    }
+
+    .sidebar {
+      --background: var(--bg-sidebar);
+      --ion-background-color: var(--bg-sidebar);
+    }
+
+    .sidebar-header {
+      background: var(--bg-sidebar);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .sidebar-header ion-toolbar {
+      --background: transparent;
+      --color: var(--text-sidebar);
+      --min-height: 70px;
+      padding: 0 16px;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .logo-icon {
+      font-size: 28px;
+    }
+
+    .logo-text {
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--text-sidebar);
+    }
+
+    .sidebar-content {
+      --background: var(--bg-sidebar);
+      display: flex;
+      flex-direction: column;
+    }
+
+    .sidebar-content ion-list {
+      background: transparent;
+      padding: 16px 12px;
+    }
+
+    .sidebar-content ion-list-header {
+      color: var(--text-tertiary);
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      padding: 16px;
+      margin-bottom: 8px;
+    }
+
+    .sidebar-content ion-item {
+      --background: transparent;
+      --color: var(--text-sidebar);
+      --border-radius: 10px;
+      --min-height: 48px;
+      margin: 4px 0;
+      font-weight: 500;
+      transition: all 0.2s ease;
+    }
+
+    .sidebar-content ion-item:hover {
+      --background: var(--bg-sidebar-hover);
+    }
+
+    .sidebar-content ion-item.selected {
+      --background: var(--bg-sidebar-hover);
+      --color: var(--accent);
+      border-left: 3px solid var(--accent);
+    }
+
+    .sidebar-content ion-item.selected ion-icon {
+      color: var(--accent);
+    }
+
+    .sidebar-content ion-icon {
+      color: var(--text-tertiary);
+      font-size: 20px;
+    }
+
+    .sidebar-footer {
+      margin-top: auto;
+      padding: 16px;
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .theme-toggle {
+      --color: var(--text-sidebar);
+      --background: transparent;
+      --background-hover: var(--bg-sidebar-hover);
+      --border-radius: 10px;
+      justify-content: flex-start;
+      text-transform: none;
+      font-weight: 500;
+    }
+
+    .logout-btn {
+      --border-radius: 10px;
+      justify-content: flex-start;
+      text-transform: none;
+      font-weight: 500;
+    }
+
+    .main-content {
+      background: var(--bg-primary);
+      min-height: 100vh;
+    }
+
+    .top-bar {
+      background: var(--bg-secondary);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .top-bar ion-toolbar {
+      --background: var(--bg-secondary);
+      --color: var(--text-primary);
+      --min-height: 64px;
+    }
+
+    .top-bar ion-title {
+      font-weight: 600;
+      font-size: 18px;
+    }
+  `]
 })
 export class AppComponent {
   private router = inject(Router);
+  private themeService = inject(ThemeService);
+  private authService = inject(AuthService);
+  private menuController = inject(MenuController);
+
   showMenu = false;
-  isNavOpen = false;
+  pageTitle = 'Dashboard';
+  isDarkMode = false;
 
   constructor() {
-    addIcons({ statsChart, business, book, trendingUp, logOut, menuOutline });
+    addIcons({ 
+      statsChart, business, book, trendingUp, logOut, moon, sunny,
+      menuOutline, closeOutline
+    });
 
-    this.router.events
-      .pipe(filter((event) => event instanceof NavigationEnd))
-      .subscribe((event: any) => {
-        this.showMenu = !["/login", "/signup"].includes(event.url);
-        if (!this.showMenu) {
-          this.isNavOpen = false;
-        }
-      });
+    // Track route changes
+    this.router.events.pipe(
+      filter(event => event instanceof NavigationEnd)
+    ).subscribe((event: any) => {
+      this.showMenu = !['/login', '/signup'].includes(event.url);
+      this.updatePageTitle(event.url);
+    });
+
+    // Track theme changes
+    this.themeService.theme$.subscribe(() => {
+      this.isDarkMode = this.themeService.getResolvedTheme() === 'dark';
+    });
   }
 
-  toggleNav() {
-    this.isNavOpen = !this.isNavOpen;
+  private updatePageTitle(url: string): void {
+    if (url.includes('/dashboard')) this.pageTitle = 'Overview';
+    else if (url.includes('/clients')) this.pageTitle = 'Clients & Projects';
+    else if (url.includes('/memory')) this.pageTitle = 'Daily Memory';
+    else if (url.includes('/stats')) this.pageTitle = 'Statistics';
+    else this.pageTitle = 'Dashboard';
   }
 
-  closeNav() {
-    this.isNavOpen = false;
+  toggleTheme(): void {
+    this.themeService.toggleTheme();
   }
 
-  logout() {
-    localStorage.removeItem("company-dashboard-session");
-    this.router.navigate(["/login"]);
-    this.closeNav();
+  async closeMenu(): Promise<void> {
+    await this.menuController.close();
+  }
+
+  logout(): void {
+    this.authService.logout();
   }
 }
