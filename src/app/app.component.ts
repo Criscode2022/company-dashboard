@@ -19,6 +19,7 @@ import {
   trendingUp,
 } from "ionicons/icons";
 import { filter } from "rxjs/operators";
+import { AuthService } from "./services/auth.service";
 import { ThemeService } from "./services/theme.service";
 
 @Component({
@@ -56,7 +57,7 @@ import { ThemeService } from "./services/theme.service";
               <ion-icon name="stats-chart"></ion-icon> Overview
             </a>
           </li>
-          
+
           <!-- Task Management -->
           <li class="nav-section">Tasks</li>
           <li>
@@ -86,7 +87,7 @@ import { ThemeService } from "./services/theme.service";
               <ion-icon name="calendar"></ion-icon> Calendar
             </a>
           </li>
-          
+
           <li>
             <a
               routerLink="/tags"
@@ -96,7 +97,7 @@ import { ThemeService } from "./services/theme.service";
               <ion-icon name="pricetag"></ion-icon> Tags
             </a>
           </li>
-          
+
           <li>
             <a
               routerLink="/activity"
@@ -106,7 +107,7 @@ import { ThemeService } from "./services/theme.service";
               <ion-icon name="pulse"></ion-icon> Activity
             </a>
           </li>
-          
+
           <!-- Company -->
           <li class="nav-section">Company</li>
           <li>
@@ -136,12 +137,12 @@ import { ThemeService } from "./services/theme.service";
               <ion-icon name="trending-up"></ion-icon> Statistics
             </a>
           </li>
-          
+
           <li class="nav-spacer"></li>
           <li>
             <a (click)="toggleTheme()" class="theme-toggle">
               <ion-icon [name]="isDarkMode ? 'sunny' : 'moon'"></ion-icon>
-              {{ isDarkMode ? 'Light Mode' : 'Dark Mode' }}
+              {{ isDarkMode ? "Light Mode" : "Dark Mode" }}
             </a>
           </li>
           <li>
@@ -289,25 +290,48 @@ import { ThemeService } from "./services/theme.service";
 })
 export class AppComponent {
   private router = inject(Router);
+  private authService = inject(AuthService);
   private themeService = inject(ThemeService);
   showMenu = false;
   isNavOpen = false;
   isDarkMode = false;
+  private isAuthenticated = false;
+  private currentUrl = this.router.url || "/";
 
   constructor() {
-    addIcons({ statsChart, business, book, trendingUp, logOut, menuOutline, moon, sunny, list, grid, calendar, checkbox, pricetag, pulse });
+    addIcons({
+      statsChart,
+      business,
+      book,
+      trendingUp,
+      logOut,
+      menuOutline,
+      moon,
+      sunny,
+      list,
+      grid,
+      calendar,
+      checkbox,
+      pricetag,
+      pulse,
+    });
 
     this.router.events
       .pipe(filter((event) => event instanceof NavigationEnd))
       .subscribe((event: any) => {
-        this.showMenu = !["/login", "/signup"].includes(event.url);
-        if (!this.showMenu) {
-          this.isNavOpen = false;
-        }
+        this.currentUrl = event.urlAfterRedirects || event.url;
+        this.updateMenuVisibility();
       });
 
+    this.authService.getAuthState().subscribe((isAuthenticated) => {
+      this.isAuthenticated = isAuthenticated;
+      this.updateMenuVisibility();
+    });
+
+    this.updateMenuVisibility();
+
     this.themeService.theme$.subscribe(() => {
-      this.isDarkMode = this.themeService.getResolvedTheme() === 'dark';
+      this.isDarkMode = this.themeService.getResolvedTheme() === "dark";
     });
   }
 
@@ -324,8 +348,16 @@ export class AppComponent {
   }
 
   logout() {
-    localStorage.removeItem("company-dashboard-session");
-    this.router.navigate(["/login"]);
+    this.authService.logout();
     this.closeNav();
+  }
+
+  private updateMenuVisibility() {
+    const path = this.currentUrl.split("?")[0].split("#")[0];
+    this.showMenu =
+      this.isAuthenticated && !["/login", "/signup"].includes(path);
+    if (!this.showMenu) {
+      this.isNavOpen = false;
+    }
   }
 }
