@@ -1,7 +1,7 @@
 [build]
   command = "npm run build"
-  publish = "dist/company-dashboard/browser"
-  
+  publish = "dist/company-dashboard"
+
 [[redirects]]
   from = "/*"
   to = "/index.html"
