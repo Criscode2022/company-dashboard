@@ -179,41 +179,42 @@ export class DashboardComponent implements OnInit {
   projects: Project[] = [];
   stats?: CompanyStats;
 
+  // NOTE: Update this array daily with today's actual activities
   recentActivity = [
     {
-      icon: "book",
-      color: "tertiary",
-      title: "New Project: TaskFlow",
-      description: "React learning app added",
-      time: "Just now",
-    },
-    {
-      icon: "rocket",
-      color: "success",
-      title: "GreenFork Deployed",
-      description: "Production deployment successful",
-      time: "8 hours ago",
-    },
-    {
-      icon: "git-branch",
-      color: "primary",
-      title: "FitPulse Repository Created",
-      description: "New project initialized",
-      time: "1 day ago",
-    },
-    {
       icon: "business",
-      color: "tertiary",
-      title: "New Client: FitPulse Studio",
-      description: "Marcus Chen - $15K budget",
-      time: "2 days ago",
+      color: "success",
+      title: "New Client Secured: Riverside Vet",
+      description: "Dr. Sarah Chen - $18K budget, 3-week MVP",
+      time: "Today, 9:15 AM",
+    },
+    {
+      icon: "folder",
+      color: "primary",
+      title: "PawTrack Vet Project Launched",
+      description: "Repository created, database schema with 6 tables",
+      time: "Today, 10:00 AM",
     },
     {
       icon: "checkmark-circle",
+      color: "tertiary",
+      title: "TaskFlow Features Merged",
+      description: "Tasks, Kanban, Calendar added to Dashboard",
+      time: "Today, 6:30 PM",
+    },
+    {
+      icon: "moon",
+      color: "primary",
+      title: "Dark Mode Added",
+      description: "Theme toggle in sidebar, CSS variables updated",
+      time: "Today, 7:00 PM",
+    },
+    {
+      icon: "cash",
       color: "success",
-      title: "GreenFork v1.0 Complete",
-      description: "All features delivered",
-      time: "3 days ago",
+      title: "Revenue Pipeline: $93K",
+      description: "6 clients, 7 active projects",
+      time: "Updated today",
     },
   ];
 
