@@ -7,10 +7,13 @@ import {
   business,
   logOut,
   menuOutline,
+  moon,
   statsChart,
+  sunny,
   trendingUp,
 } from "ionicons/icons";
 import { filter } from "rxjs/operators";
+import { ThemeService } from "./services/theme.service";
 
 @Component({
   selector: "app-root",
@@ -72,6 +75,13 @@ import { filter } from "rxjs/operators";
               <ion-icon name="trending-up"></ion-icon> Statistics
             </a>
           </li>
+          <li class="nav-spacer"></li>
+          <li>
+            <a (click)="toggleTheme()" class="theme-toggle">
+              <ion-icon [name]="isDarkMode ? 'sunny' : 'moon'"></ion-icon>
+              {{ isDarkMode ? 'Light Mode' : 'Dark Mode' }}
+            </a>
+          </li>
           <li>
             <a (click)="logout()" class="logout">
               <ion-icon name="log-out"></ion-icon> Logout
@@ -130,6 +140,12 @@ import { filter } from "rxjs/operators";
         list-style: none;
         margin: 0;
         padding: 8px 0;
+        display: flex;
+        flex-direction: column;
+        flex: 1;
+      }
+      .nav-spacer {
+        flex: 1;
       }
       .nav-list li a {
         display: flex;
@@ -152,10 +168,16 @@ import { filter } from "rxjs/operators";
       .nav-list li a.logout {
         color: #ff6b6b;
       }
+      .nav-list li a.theme-toggle {
+        color: rgba(255, 255, 255, 0.85);
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+        margin-top: 8px;
+      }
       .main-content {
         flex: 1;
         overflow-y: auto;
-        background: #f4f5f8;
+        background: var(--bg-primary, #f4f5f8);
+        transition: background 0.3s ease;
       }
       ion-icon {
         font-size: 20px;
@@ -196,11 +218,13 @@ import { filter } from "rxjs/operators";
 })
 export class AppComponent {
   private router = inject(Router);
+  private themeService = inject(ThemeService);
   showMenu = false;
   isNavOpen = false;
+  isDarkMode = false;
 
   constructor() {
-    addIcons({ statsChart, business, book, trendingUp, logOut, menuOutline });
+    addIcons({ statsChart, business, book, trendingUp, logOut, menuOutline, moon, sunny });
 
     this.router.events
       .pipe(filter((event) => event instanceof NavigationEnd))
@@ -210,6 +234,11 @@ export class AppComponent {
           this.isNavOpen = false;
         }
       });
+
+    // Track theme changes
+    this.themeService.theme$.subscribe(() => {
+      this.isDarkMode = this.themeService.getResolvedTheme() === 'dark';
+    });
   }
 
   toggleNav() {
@@ -218,6 +247,10 @@ export class AppComponent {
 
   closeNav() {
     this.isNavOpen = false;
+  }
+
+  toggleTheme() {
+    this.themeService.toggleTheme();
   }
 
   logout() {
