@@ -8,12 +8,26 @@ import { Task, Tag, ActivityEntry } from '../models/task.model';
 export class TaskService {
   constructor(private db: DatabaseService) {}
 
+  // Transform database fields (snake_case) to model fields (camelCase)
+  private transformFromDb(dbTask: any): Task {
+    return {
+      ...dbTask,
+      dueDate: dbTask.due_date,
+      tagIds: dbTask.tag_ids,
+      // Remove snake_case fields
+      due_date: undefined,
+      tag_ids: undefined,
+    } as Task;
+  }
+
   async getTasks(): Promise<Task[]> {
-    return this.db.select<Task>('tasks', { order: 'created_at.desc' });
+    const tasks = await this.db.select<any>('tasks', { order: 'created_at.desc' });
+    return tasks.map(t => this.transformFromDb(t));
   }
 
   async getTaskById(id: string): Promise<Task | undefined> {
-    return this.db.selectOne<Task>('tasks', { filters: { id: `eq.${id}` } });
+    const task = await this.db.selectOne<any>('tasks', { filters: { id: `eq.${id}` } });
+    return task ? this.transformFromDb(task) : undefined;
   }
 
   async createTask(task: Partial<Task>): Promise<Task> {
