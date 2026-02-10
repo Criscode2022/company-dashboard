@@ -16,13 +16,14 @@ import {
   search,
   trash,
 } from "ionicons/icons";
+import { TaskFormComponent } from "../../components/task-form/task-form.component";
 import { Priority, Tag, Task, TaskStatus } from "../../models/task.model";
 import { TaskService } from "../../services/task.service";
 
 @Component({
   selector: "app-tasks",
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule],
+  imports: [CommonModule, FormsModule, RouterModule, TaskFormComponent],
   template: `
     <div class="page-container">
       <div class="page-header">
@@ -31,6 +32,13 @@ import { TaskService } from "../../services/task.service";
           <span>+</span> New Task
         </button>
       </div>
+
+      <app-task-form
+        *ngIf="showAddTask"
+        [availableTags]="tags"
+        (save)="createTask($event)"
+        (close)="closeAddTask()"
+      ></app-task-form>
 
       <!-- Filters -->
       <div class="card mb-4">
@@ -294,6 +302,27 @@ export class TasksPage implements OnInit {
       await this.taskService.deleteTask(id);
       await this.loadData();
     }
+  }
+
+  async createTask(formData: Partial<Task>) {
+    const normalizedDueDate = formData.dueDate ? formData.dueDate : null;
+    const status = formData.status || "todo";
+    const completed = status === "done";
+
+    await this.taskService.createTask({
+      ...formData,
+      dueDate: normalizedDueDate,
+      status,
+      completed,
+      tagIds: formData.tagIds || [],
+    });
+
+    this.showAddTask = false;
+    await this.loadData();
+  }
+
+  closeAddTask() {
+    this.showAddTask = false;
   }
 
   editTask(task: Task) {
