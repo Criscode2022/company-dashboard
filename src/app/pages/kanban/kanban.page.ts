@@ -1,8 +1,8 @@
 import { CommonModule } from "@angular/common";
-import { Component, OnInit } from "@angular/core";
+import { Component, OnInit, HostListener } from "@angular/core";
 import { FormsModule } from "@angular/forms";
 import { addIcons } from "ionicons";
-import { add, checkmark, filter } from "ionicons/icons";
+import { add, checkmark, filter, chevronForward, chevronBack } from "ionicons/icons";
 import { Task, TaskStatus } from "../../models/task.model";
 import { Project } from "../../models";
 import { TaskService } from "../../services/task.service";
@@ -17,7 +17,8 @@ import { DatabaseService } from "../../services/database.service";
       <div class="page-header">
         <div>
           <h1 class="page-title">📋 Kanban Board</h1>
-          <p class="text-secondary">Drag and drop tasks to change status</p>
+          <p class="text-secondary desktop-only">Drag and drop tasks to change status</p>
+          <p class="text-secondary mobile-only">Use buttons to move tasks</p>
         </div>
         <div class="header-filters">
           <select [(ngModel)]="filterProject" class="form-input" (change)="onProjectFilterChange()">
@@ -49,6 +50,9 @@ import { DatabaseService } from "../../services/database.service";
               class="kanban-card"
               draggable="true"
               (dragstart)="onDragStart($event, task)"
+              (touchstart)="onTouchStart($event, task)"
+              (touchmove)="onTouchMove($event)"
+              (touchend)="onTouchEnd($event)"
               (click)="editTask(task)"
             >
               <div class="card-priority" [class]="task.priority"></div>
@@ -61,6 +65,17 @@ import { DatabaseService } from "../../services/database.service";
               </div>
               <div *ngIf="task.subtasks?.length" class="card-meta">
                 ✅ {{ getCompletedSubtasks(task) }}/{{ task.subtasks.length }}
+              </div>
+              
+              <!-- Mobile/Tablet Status Buttons -->
+              <div class="mobile-actions">
+                <button 
+                  class="btn-move"
+                  (click)="$event.stopPropagation(); moveTask(task, 'in-progress')"
+                  title="Move to In Progress"
+                >
+                  Start →
+                </button>
               </div>
             </div>
           </div>
@@ -85,6 +100,9 @@ import { DatabaseService } from "../../services/database.service";
               class="kanban-card"
               draggable="true"
               (dragstart)="onDragStart($event, task)"
+              (touchstart)="onTouchStart($event, task)"
+              (touchmove)="onTouchMove($event)"
+              (touchend)="onTouchEnd($event)"
               (click)="editTask(task)"
             >
               <div class="card-priority" [class]="task.priority"></div>
@@ -97,6 +115,24 @@ import { DatabaseService } from "../../services/database.service";
               </div>
               <div *ngIf="task.subtasks?.length" class="card-meta">
                 ✅ {{ getCompletedSubtasks(task) }}/{{ task.subtasks.length }}
+              </div>
+              
+              <!-- Mobile/Tablet Status Buttons -->
+              <div class="mobile-actions">
+                <button 
+                  class="btn-move back"
+                  (click)="$event.stopPropagation(); moveTask(task, 'todo')"
+                  title="Move back to To Do"
+                >
+                  ← Back
+                </button>
+                <button 
+                  class="btn-move"
+                  (click)="$event.stopPropagation(); moveTask(task, 'done')"
+                  title="Move to Done"
+                >
+                  Complete →
+                </button>
               </div>
             </div>
           </div>
@@ -121,6 +157,9 @@ import { DatabaseService } from "../../services/database.service";
               class="kanban-card completed"
               draggable="true"
               (dragstart)="onDragStart($event, task)"
+              (touchstart)="onTouchStart($event, task)"
+              (touchmove)="onTouchMove($event)"
+              (touchend)="onTouchEnd($event)"
               (click)="editTask(task)"
             >
               <div class="card-priority" [class]="task.priority"></div>
@@ -129,6 +168,17 @@ import { DatabaseService } from "../../services/database.service";
                 📁 {{ getProjectName(task.projectId) }}
               </div>
               <div class="card-meta">✅ Completed</div>
+              
+              <!-- Mobile/Tablet Status Buttons -->
+              <div class="mobile-actions">
+                <button 
+                  class="btn-move back"
+                  (click)="$event.stopPropagation(); moveTask(task, 'in-progress')"
+                  title="Move back to In Progress"
+                >
+                  ← Reopen
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -155,6 +205,22 @@ import { DatabaseService } from "../../services/database.service";
         min-width: 200px;
       }
 
+      .mobile-only {
+        display: none;
+      }
+      .desktop-only {
+        display: block;
+      }
+
+      @media (max-width: 768px) {
+        .mobile-only {
+          display: block;
+        }
+        .desktop-only {
+          display: none;
+        }
+      }
+
       .kanban-board {
         display: grid;
         grid-template-columns: repeat(3, 1fr);
@@ -174,6 +240,7 @@ import { DatabaseService } from "../../services/database.service";
         min-height: 500px;
         transition: background var(--transition-fast);
         border: 2px solid transparent;
+        touch-action: pan-y;
       }
 
       .kanban-column.drag-over {
@@ -241,6 +308,8 @@ import { DatabaseService } from "../../services/database.service";
           box-shadow var(--transition-fast),
           opacity var(--transition-fast);
         border-left: 3px solid transparent;
+        touch-action: none;
+        user-select: none;
       }
 
       .kanban-card:hover {
@@ -294,6 +363,71 @@ import { DatabaseService } from "../../services/database.service";
         font-size: 12px;
         color: var(--text-secondary);
       }
+
+      /* Mobile Actions - Hidden by default, shown on touch devices */
+      .mobile-actions {
+        display: none;
+        gap: 8px;
+        margin-top: 12px;
+        padding-top: 12px;
+        border-top: 1px solid var(--border);
+      }
+
+      @media (hover: none) and (pointer: coarse) {
+        .mobile-actions {
+          display: flex;
+          flex-wrap: wrap;
+        }
+        .kanban-card {
+          cursor: pointer;
+        }
+      }
+
+      @media (max-width: 768px) {
+        .mobile-actions {
+          display: flex;
+          flex-wrap: wrap;
+        }
+        .kanban-card {
+          cursor: pointer;
+        }
+      }
+
+      .btn-move {
+        flex: 1;
+        min-width: 80px;
+        padding: 6px 12px;
+        border: none;
+        border-radius: var(--radius-sm);
+        background: var(--accent);
+        color: white;
+        font-size: 12px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: background var(--transition-fast);
+      }
+
+      .btn-move:hover {
+        background: var(--accent-dark);
+      }
+
+      .btn-move.back {
+        background: var(--bg-secondary);
+        color: var(--text-secondary);
+      }
+
+      .btn-move.back:hover {
+        background: var(--border);
+      }
+
+      /* Touch dragging visual feedback */
+      .kanban-card.touch-dragging {
+        opacity: 0.5;
+        transform: scale(1.02);
+        box-shadow: var(--shadow-xl);
+        z-index: 1000;
+        position: relative;
+      }
     `,
   ],
 })
@@ -303,12 +437,15 @@ export class KanbanPage implements OnInit {
   filterProject: "all" | string = "all";
   dragOverColumn: TaskStatus | null = null;
   draggedTaskId: string | null = null;
+  touchDragTask: Task | null = null;
+  touchStartX: number = 0;
+  touchStartY: number = 0;
 
   constructor(
     private taskService: TaskService,
     private db: DatabaseService
   ) {
-    addIcons({ add, checkmark, filter });
+    addIcons({ add, checkmark, filter, chevronForward, chevronBack });
   }
 
   async ngOnInit() {
@@ -359,7 +496,7 @@ export class KanbanPage implements OnInit {
     return project?.name || "";
   }
 
-  // Drag and Drop Handlers
+  // Desktop Drag and Drop Handlers
   onDragStart(event: DragEvent, task: Task) {
     this.draggedTaskId = task.id;
     if (event.dataTransfer) {
@@ -406,6 +543,72 @@ export class KanbanPage implements OnInit {
 
     if (task.status === newStatus) return;
 
+    await this.updateTaskStatus(task, newStatus);
+    this.draggedTaskId = null;
+  }
+
+  // Touch Event Handlers for Tablet/Mobile
+  onTouchStart(event: TouchEvent, task: Task) {
+    this.touchDragTask = task;
+    const touch = event.touches[0];
+    this.touchStartX = touch.clientX;
+    this.touchStartY = touch.clientY;
+
+    const card = event.currentTarget as HTMLElement;
+    card.classList.add('touch-dragging');
+  }
+
+  onTouchMove(event: TouchEvent) {
+    if (!this.touchDragTask) return;
+
+    event.preventDefault();
+    const touch = event.touches[0];
+    const element = document.elementFromPoint(touch.clientX, touch.clientY);
+
+    // Find which column we're hovering over
+    const column = element?.closest('.kanban-column');
+    if (column) {
+      const columnClasses = column.classList;
+      if (columnClasses.contains('kanban-column')) {
+        // Determine column by checking previous siblings or data attribute
+        const columns = document.querySelectorAll('.kanban-column');
+        columns.forEach((col, index) => {
+          if (col === column) {
+            const statuses: TaskStatus[] = ['todo', 'in-progress', 'done'];
+            this.dragOverColumn = statuses[index];
+          }
+        });
+      }
+    }
+  }
+
+  async onTouchEnd(event: TouchEvent) {
+    if (!this.touchDragTask) return;
+
+    const card = document.querySelector('.kanban-card.touch-dragging');
+    if (card) {
+      card.classList.remove('touch-dragging');
+    }
+
+    const touch = event.changedTouches[0];
+    const element = document.elementFromPoint(touch.clientX, touch.clientY);
+    const column = element?.closest('.kanban-column');
+
+    if (column && this.dragOverColumn) {
+      await this.updateTaskStatus(this.touchDragTask, this.dragOverColumn);
+    }
+
+    this.dragOverColumn = null;
+    this.touchDragTask = null;
+  }
+
+  // Mobile button action
+  async moveTask(task: Task, newStatus: TaskStatus) {
+    if (task.status === newStatus) return;
+    await this.updateTaskStatus(task, newStatus);
+  }
+
+  async updateTaskStatus(task: Task, newStatus: TaskStatus) {
     const updates: Partial<Task> = {
       status: newStatus,
       completed: newStatus === "done",
@@ -422,8 +625,6 @@ export class KanbanPage implements OnInit {
     } catch (error) {
       console.error("Failed to update task status:", error);
     }
-
-    this.draggedTaskId = null;
   }
 
   editTask(task: Task) {
