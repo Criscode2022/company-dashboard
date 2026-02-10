@@ -1,7 +1,8 @@
 import { CommonModule } from "@angular/common";
-import { Component, EventEmitter, Input, Output } from "@angular/core";
+import { Component, EventEmitter, Input, Output, OnInit } from "@angular/core";
 import { FormsModule } from "@angular/forms";
 import { Tag, Task } from "../../models/task.model";
+import { Project } from "../../models";
 
 @Component({
   selector: "app-task-form",
@@ -27,13 +28,27 @@ import { Tag, Task } from "../../models/task.model";
           </div>
 
           <div class="form-group">
+            <label>Project *</label>
+            <select [(ngModel)]="formData.projectId" class="form-input" required>
+              <option value="" disabled selected>Select a project</option>
+              <option *ngFor="let project of projects" [value]="project.id">
+                {{ project.name }}
+              </option>
+            </select>
+            <small class="form-help" *ngIf="projects.length === 0"
+              >No projects available. Create a project first.</small
+            >
+          </div>
+
+          <div class="form-group">
             <label>Description</label>
             <textarea
               [(ngModel)]="formData.description"
               placeholder="Add more details..."
               class="form-input"
               rows="3"
-            ></textarea>
+            >
+            </textarea>
           </div>
 
           <div class="form-row">
@@ -86,7 +101,7 @@ import { Tag, Task } from "../../models/task.model";
           <button
             class="btn btn-primary"
             (click)="onSave()"
-            [disabled]="!formData.title"
+            [disabled]="!formData.title || !formData.projectId"
           >
             {{ task ? "Update" : "Create" }} Task
           </button>
@@ -154,6 +169,13 @@ import { Tag, Task } from "../../models/task.model";
         gap: 16px;
       }
 
+      .form-help {
+        display: block;
+        margin-top: 6px;
+        font-size: 12px;
+        color: var(--warning);
+      }
+
       .tag-selector {
         display: flex;
         flex-wrap: wrap;
@@ -203,9 +225,10 @@ import { Tag, Task } from "../../models/task.model";
     `,
   ],
 })
-export class TaskFormComponent {
+export class TaskFormComponent implements OnInit {
   @Input() task: Task | null = null;
   @Input() availableTags: Tag[] = [];
+  @Input() projects: Project[] = [];
   @Output() save = new EventEmitter<Partial<Task>>();
   @Output() close = new EventEmitter<void>();
 
@@ -216,6 +239,7 @@ export class TaskFormComponent {
     status: "todo",
     dueDate: null,
     tagIds: [],
+    projectId: "",
   };
 
   ngOnInit() {
@@ -227,6 +251,7 @@ export class TaskFormComponent {
         status: this.task.status,
         dueDate: this.task.dueDate,
         tagIds: [...this.task.tagIds],
+        projectId: this.task.projectId || "",
       };
     }
   }
@@ -245,7 +270,7 @@ export class TaskFormComponent {
   }
 
   onSave() {
-    if (!this.formData.title) return;
+    if (!this.formData.title || !this.formData.projectId) return;
     this.save.emit(this.formData);
   }
 

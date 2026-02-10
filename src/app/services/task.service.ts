@@ -14,9 +14,11 @@ export class TaskService {
       ...dbTask,
       dueDate: dbTask.due_date,
       tagIds: dbTask.tag_ids,
+      projectId: dbTask.project_id,
       // Remove snake_case fields
       due_date: undefined,
       tag_ids: undefined,
+      project_id: undefined,
     } as Task;
   }
 
@@ -50,7 +52,14 @@ export class TaskService {
       delete dbTask.tagIds;
     }
 
-    return this.db.insert<Task>('tasks', dbTask);
+    // Transform projectId to project_id for database
+    if (task.projectId !== undefined) {
+      dbTask.project_id = task.projectId;
+      delete dbTask.projectId;
+    }
+
+    const result = await this.db.insert<any>('tasks', dbTask);
+    return this.transformFromDb(result);
   }
 
   async updateTask(id: string, updates: Partial<Task>): Promise<Task | undefined> {
@@ -72,7 +81,14 @@ export class TaskService {
       delete dbUpdates.tagIds;
     }
 
-    return this.db.update<Task>('tasks', id, dbUpdates);
+    // Transform projectId to project_id for database
+    if (updates.projectId !== undefined) {
+      dbUpdates.project_id = updates.projectId;
+      delete dbUpdates.projectId;
+    }
+
+    const result = await this.db.update<any>('tasks', id, dbUpdates);
+    return result ? this.transformFromDb(result) : undefined;
   }
 
   async deleteTask(id: string): Promise<void> {

@@ -1,22 +1,33 @@
 import { CommonModule } from "@angular/common";
 import { Component, OnInit } from "@angular/core";
+import { FormsModule } from "@angular/forms";
 import { addIcons } from "ionicons";
-import { chevronBack, chevronForward } from "ionicons/icons";
+import { chevronBack, chevronForward, filter } from "ionicons/icons";
 import { Task } from "../../models/task.model";
+import { Project } from "../../models";
 import { TaskService } from "../../services/task.service";
+import { DatabaseService } from "../../services/database.service";
 
 @Component({
   selector: "app-calendar",
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, FormsModule],
   template: `
     <div class="page-container">
       <div class="page-header">
         <h1 class="page-title">📅 Calendar</h1>
-        <div class="calendar-nav">
-          <button class="btn btn-ghost" (click)="previousMonth()"><</button>
-          <span class="current-month">{{ currentMonthYear }}</span>
-          <button class="btn btn-ghost" (click)="nextMonth()">></button>
+        <div class="header-controls">
+          <select [(ngModel)]="filterProject" class="form-input" (change)="onProjectFilterChange()">
+            <option value="all">All Projects</option>
+            <option *ngFor="let project of projects" [value]="project.id">
+              {{ project.name }}
+            </option>
+          </select>
+          <div class="calendar-nav">
+            <button class="btn btn-ghost" (click)="previousMonth()">&lt;</button>
+            <span class="current-month">{{ currentMonthYear }}</span>
+            <button class="btn btn-ghost" (click)="nextMonth()">&gt;</button>
+          </div>
         </div>
       </div>
 
@@ -42,10 +53,9 @@ import { TaskService } from "../../services/task.service";
                 class="day-task"
                 [class]="task.priority"
                 (click)="$event.stopPropagation(); editTask(task)"
-                [title]="task.title"
+                [title]="task.title + (task.projectName ? ' - ' + task.projectName : '')"
               >
-                {{ task.title | slice: 0 : 15
-                }}{{ task.title.length > 15 ? "..." : "" }}
+                {{ task.title | slice: 0 : 15 }}{{ task.title.length > 15 ? "..." : "" }}
               </div>
               <div *ngIf="date.tasks.length > 3" class="more-tasks">
                 +{{ date.tasks.length - 3 }} more
@@ -58,6 +68,25 @@ import { TaskService } from "../../services/task.service";
   `,
   styles: [
     `
+      .page-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 16px;
+      }
+
+      .header-controls {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        flex-wrap: wrap;
+      }
+
+      .header-controls select {
+        min-width: 200px;
+      }
+
       .calendar-nav {
         display: flex;
         align-items: center;
@@ -170,6 +199,18 @@ import { TaskService } from "../../services/task.service";
       }
 
       @media (max-width: 768px) {
+        .page-header {
+          flex-direction: column;
+          align-items: flex-start;
+        }
+        .header-controls {
+          width: 100%;
+          justify-content: space-between;
+        }
+        .header-controls select {
+          flex: 1;
+          min-width: 0;
+        }
         .calendar-day {
           min-height: 80px;
           padding: 4px;
@@ -184,19 +225,52 @@ import { TaskService } from "../../services/task.service";
 })
 export class CalendarPage implements OnInit {
   tasks: Task[] = [];
+  projects: Project[] = [];
+  filterProject: "all" | string = "all";
   currentDate = new Date();
   weekDays = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
-  constructor(private taskService: TaskService) {
-    addIcons({ chevronBack, chevronForward });
+  constructor(
+    private taskService: TaskService,
+    private db: DatabaseService
+  ) {
+    addIcons({ chevronBack, chevronForward, filter });
   }
 
   async ngOnInit() {
-    await this.loadTasks();
+    await this.loadData();
+  }
+
+  async loadData() {
+    await Promise.all([
+      this.loadTasks(),
+      this.loadProjects(),
+    ]);
   }
 
   async loadTasks() {
     this.tasks = await this.taskService.getTasks();
+  }
+
+  async loadProjects() {
+    this.projects = await this.db.getProjects();
+  }
+
+  get filteredTasks(): Task[] {
+    if (this.filterProject === "all") {
+      return this.tasks;
+    }
+    return this.tasks.filter((t) => t.projectId === this.filterProject);
+  }
+
+  onProjectFilterChange() {
+    // Filter is reactive via getter
+  }
+
+  getProjectName(projectId: string | null): string {
+    if (!projectId) return "";
+    const project = this.projects.find((p) => p.id === projectId);
+    return project?.name || "";
   }
 
   get currentMonthYear(): string {
@@ -210,7 +284,7 @@ export class CalendarPage implements OnInit {
     day: number;
     isCurrentMonth: boolean;
     isToday: boolean;
-    tasks: Task[];
+    tasks: Array<Task & { projectName?: string }>;
   }> {
     const year = this.currentDate.getFullYear();
     const month = this.currentDate.getMonth();
@@ -224,7 +298,7 @@ export class CalendarPage implements OnInit {
       day: number;
       isCurrentMonth: boolean;
       isToday: boolean;
-      tasks: Task[];
+      tasks: Array<Task & { projectName?: string }>;
     }> = [];
 
     // Previous month days
@@ -242,6 +316,13 @@ export class CalendarPage implements OnInit {
     const today = new Date();
     for (let day = 1; day <= daysInMonth; day++) {
       const dateStr = new Date(year, month, day).toISOString().split("T")[0];
+      const dayTasks = this.filteredTasks
+        .filter((t) => t.dueDate && t.dueDate.startsWith(dateStr))
+        .map((t) => ({
+          ...t,
+          projectName: this.getProjectName(t.projectId),
+        }));
+
       days.push({
         day,
         isCurrentMonth: true,
@@ -249,9 +330,7 @@ export class CalendarPage implements OnInit {
           today.getDate() === day &&
           today.getMonth() === month &&
           today.getFullYear() === year,
-        tasks: this.tasks.filter(
-          (t) => t.dueDate && t.dueDate.startsWith(dateStr),
-        ),
+        tasks: dayTasks,
       });
     }
 

@@ -1,19 +1,32 @@
 import { CommonModule } from "@angular/common";
 import { Component, OnInit } from "@angular/core";
+import { FormsModule } from "@angular/forms";
 import { addIcons } from "ionicons";
-import { add, checkmark } from "ionicons/icons";
+import { add, checkmark, filter } from "ionicons/icons";
 import { Task, TaskStatus } from "../../models/task.model";
+import { Project } from "../../models";
 import { TaskService } from "../../services/task.service";
+import { DatabaseService } from "../../services/database.service";
 
 @Component({
   selector: "app-kanban",
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, FormsModule],
   template: `
     <div class="page-container">
       <div class="page-header">
-        <h1 class="page-title">📋 Kanban Board</h1>
-        <p class="text-secondary">Drag and drop tasks to change status</p>
+        <div>
+          <h1 class="page-title">📋 Kanban Board</h1>
+          <p class="text-secondary">Drag and drop tasks to change status</p>
+        </div>
+        <div class="header-filters">
+          <select [(ngModel)]="filterProject" class="form-input" (change)="onProjectFilterChange()">
+            <option value="all">All Projects</option>
+            <option *ngFor="let project of projects" [value]="project.id">
+              {{ project.name }}
+            </option>
+          </select>
+        </div>
       </div>
 
       <div class="kanban-board">
@@ -40,6 +53,9 @@ import { TaskService } from "../../services/task.service";
             >
               <div class="card-priority" [class]="task.priority"></div>
               <div class="card-title">{{ task.title }}</div>
+              <div *ngIf="getProjectName(task.projectId)" class="card-project">
+                📁 {{ getProjectName(task.projectId) }}
+              </div>
               <div *ngIf="task.dueDate" class="card-meta">
                 📅 {{ formatDate(task.dueDate) }}
               </div>
@@ -73,6 +89,9 @@ import { TaskService } from "../../services/task.service";
             >
               <div class="card-priority" [class]="task.priority"></div>
               <div class="card-title">{{ task.title }}</div>
+              <div *ngIf="getProjectName(task.projectId)" class="card-project">
+                📁 {{ getProjectName(task.projectId) }}
+              </div>
               <div *ngIf="task.dueDate" class="card-meta">
                 📅 {{ formatDate(task.dueDate) }}
               </div>
@@ -106,6 +125,9 @@ import { TaskService } from "../../services/task.service";
             >
               <div class="card-priority" [class]="task.priority"></div>
               <div class="card-title">{{ task.title }}</div>
+              <div *ngIf="getProjectName(task.projectId)" class="card-project">
+                📁 {{ getProjectName(task.projectId) }}
+              </div>
               <div class="card-meta">✅ Completed</div>
             </div>
           </div>
@@ -116,11 +138,21 @@ import { TaskService } from "../../services/task.service";
   styles: [
     `
       .page-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
         margin-bottom: 24px;
       }
       .page-header p {
         margin-top: 8px;
         font-size: 14px;
+      }
+      .header-filters {
+        display: flex;
+        gap: 12px;
+      }
+      .header-filters select {
+        min-width: 200px;
       }
 
       .kanban-board {
@@ -251,6 +283,13 @@ import { TaskService } from "../../services/task.service";
         margin-bottom: 8px;
       }
 
+      .card-project {
+        font-size: 12px;
+        color: var(--accent);
+        font-weight: 500;
+        margin-bottom: 4px;
+      }
+
       .card-meta {
         font-size: 12px;
         color: var(--text-secondary);
@@ -260,31 +299,64 @@ import { TaskService } from "../../services/task.service";
 })
 export class KanbanPage implements OnInit {
   tasks: Task[] = [];
+  projects: Project[] = [];
+  filterProject: "all" | string = "all";
   dragOverColumn: TaskStatus | null = null;
   draggedTaskId: string | null = null;
 
-  constructor(private taskService: TaskService) {
-    addIcons({ add, checkmark });
+  constructor(
+    private taskService: TaskService,
+    private db: DatabaseService
+  ) {
+    addIcons({ add, checkmark, filter });
   }
 
   async ngOnInit() {
-    await this.loadTasks();
+    await this.loadData();
+  }
+
+  async loadData() {
+    await Promise.all([
+      this.loadTasks(),
+      this.loadProjects(),
+    ]);
   }
 
   async loadTasks() {
     this.tasks = await this.taskService.getTasks();
   }
 
+  async loadProjects() {
+    this.projects = await this.db.getProjects();
+  }
+
+  get filteredTasks(): Task[] {
+    if (this.filterProject === "all") {
+      return this.tasks;
+    }
+    return this.tasks.filter((t) => t.projectId === this.filterProject);
+  }
+
   get todoTasks(): Task[] {
-    return this.tasks.filter((t) => t.status === "todo");
+    return this.filteredTasks.filter((t) => t.status === "todo");
   }
 
   get inProgressTasks(): Task[] {
-    return this.tasks.filter((t) => t.status === "in-progress");
+    return this.filteredTasks.filter((t) => t.status === "in-progress");
   }
 
   get doneTasks(): Task[] {
-    return this.tasks.filter((t) => t.status === "done");
+    return this.filteredTasks.filter((t) => t.status === "done");
+  }
+
+  onProjectFilterChange() {
+    // Filter is reactive via getter
+  }
+
+  getProjectName(projectId: string | null): string {
+    if (!projectId) return "";
+    const project = this.projects.find((p) => p.id === projectId);
+    return project?.name || "";
   }
 
   // Drag and Drop Handlers
@@ -293,7 +365,6 @@ export class KanbanPage implements OnInit {
     if (event.dataTransfer) {
       event.dataTransfer.effectAllowed = "move";
       event.dataTransfer.setData("text/plain", task.id);
-      // Add visual feedback
       const card = event.target as HTMLElement;
       card.style.opacity = "0.5";
     }
@@ -311,7 +382,6 @@ export class KanbanPage implements OnInit {
   onDragLeave(event: DragEvent) {
     event.preventDefault();
     event.stopPropagation();
-    // Only clear if we're actually leaving the column (not entering a child)
     const rect = (event.currentTarget as HTMLElement).getBoundingClientRect();
     const x = event.clientX;
     const y = event.clientY;
@@ -325,7 +395,6 @@ export class KanbanPage implements OnInit {
     event.stopPropagation();
     this.dragOverColumn = null;
 
-    // Reset opacity on all cards
     document.querySelectorAll('.kanban-card').forEach((card) => {
       (card as HTMLElement).style.opacity = '1';
     });
@@ -335,10 +404,8 @@ export class KanbanPage implements OnInit {
     const task = this.tasks.find((t) => t.id === this.draggedTaskId);
     if (!task) return;
 
-    // Don't update if status hasn't changed
     if (task.status === newStatus) return;
 
-    // Update the task status
     const updates: Partial<Task> = {
       status: newStatus,
       completed: newStatus === "done",
@@ -346,10 +413,7 @@ export class KanbanPage implements OnInit {
 
     try {
       await this.taskService.updateTask(task.id, updates);
-      // Reload tasks to reflect changes
       await this.loadTasks();
-      
-      // Log activity
       await this.taskService.logActivity(
         "Task moved",
         task.id,
@@ -364,7 +428,6 @@ export class KanbanPage implements OnInit {
 
   editTask(task: Task) {
     console.log("Edit task:", task);
-    // TODO: Open edit modal
   }
 
   formatDate(date: string): string {

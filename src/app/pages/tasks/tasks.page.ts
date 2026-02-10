@@ -18,7 +18,9 @@ import {
 } from "ionicons/icons";
 import { TaskFormComponent } from "../../components/task-form/task-form.component";
 import { Priority, Tag, Task, TaskStatus } from "../../models/task.model";
+import { Project } from "../../models";
 import { TaskService } from "../../services/task.service";
+import { DatabaseService } from "../../services/database.service";
 
 @Component({
   selector: "app-tasks",
@@ -36,6 +38,7 @@ import { TaskService } from "../../services/task.service";
       <app-task-form
         *ngIf="showAddTask"
         [availableTags]="tags"
+        [projects]="projects"
         (save)="createTask($event)"
         (close)="closeAddTask()"
       ></app-task-form>
@@ -66,6 +69,13 @@ import { TaskService } from "../../services/task.service";
               <option value="high">High</option>
               <option value="medium">Medium</option>
               <option value="low">Low</option>
+            </select>
+
+            <select [(ngModel)]="filterProject" class="form-input">
+              <option value="all">All Projects</option>
+              <option *ngFor="let project of projects" [value]="project.id">
+                {{ project.name }}
+              </option>
             </select>
           </div>
         </div>
@@ -118,6 +128,9 @@ import { TaskService } from "../../services/task.service";
               <div class="task-meta">
                 <span class="badge" [class]="'badge-' + task.priority">
                   {{ task.priority }}
+                </span>
+                <span *ngIf="getProjectName(task.projectId)" class="task-project">
+                  📁 {{ getProjectName(task.projectId) }}
                 </span>
                 <span
                   *ngIf="task.dueDate"
@@ -207,6 +220,11 @@ import { TaskService } from "../../services/task.service";
         font-size: 13px;
       }
 
+      .task-project {
+        color: var(--accent);
+        font-weight: 500;
+      }
+
       .task-due {
         color: var(--text-secondary);
       }
@@ -237,12 +255,17 @@ import { TaskService } from "../../services/task.service";
 export class TasksPage implements OnInit {
   tasks: Task[] = [];
   tags: Tag[] = [];
+  projects: Project[] = [];
   searchQuery = "";
   filterStatus: "all" | TaskStatus = "all";
   filterPriority: "all" | Priority = "all";
+  filterProject: "all" | string = "all";
   showAddTask = false;
 
-  constructor(private taskService: TaskService) {
+  constructor(
+    private taskService: TaskService,
+    private db: DatabaseService
+  ) {
     addIcons({
       add,
       funnel,
@@ -263,8 +286,23 @@ export class TasksPage implements OnInit {
   }
 
   async loadData() {
+    await Promise.all([
+      this.loadTasks(),
+      this.loadTags(),
+      this.loadProjects(),
+    ]);
+  }
+
+  async loadTasks() {
     this.tasks = await this.taskService.getTasks();
+  }
+
+  async loadTags() {
     this.tags = await this.taskService.getTags();
+  }
+
+  async loadProjects() {
+    this.projects = await this.db.getProjects();
   }
 
   get filteredTasks(): Task[] {
@@ -284,23 +322,35 @@ export class TasksPage implements OnInit {
       ) {
         return false;
       }
+      if (
+        this.filterProject !== "all" &&
+        task.projectId !== this.filterProject
+      ) {
+        return false;
+      }
       return true;
     });
   }
 
   get stats() {
-    return this.taskService.getTaskStats(this.tasks);
+    return this.taskService.getTaskStats(this.filteredTasks);
+  }
+
+  getProjectName(projectId: string | null): string {
+    if (!projectId) return "";
+    const project = this.projects.find((p) => p.id === projectId);
+    return project?.name || "";
   }
 
   async toggleComplete(task: Task) {
     await this.taskService.toggleTaskCompletion(task.id, !task.completed);
-    await this.loadData();
+    await this.loadTasks();
   }
 
   async deleteTask(id: string) {
     if (confirm("Delete this task?")) {
       await this.taskService.deleteTask(id);
-      await this.loadData();
+      await this.loadTasks();
     }
   }
 
@@ -318,7 +368,7 @@ export class TasksPage implements OnInit {
     });
 
     this.showAddTask = false;
-    await this.loadData();
+    await this.loadTasks();
   }
 
   closeAddTask() {
