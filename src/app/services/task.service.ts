@@ -17,18 +17,48 @@ export class TaskService {
   }
 
   async createTask(task: Partial<Task>): Promise<Task> {
-    return this.db.insert<Task>('tasks', {
+    // Map camelCase fields to snake_case for database
+    const dbTask: any = {
       ...task,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
-    });
+    };
+
+    // Transform dueDate to due_date for database
+    if (task.dueDate !== undefined) {
+      dbTask.due_date = task.dueDate;
+      delete dbTask.dueDate;
+    }
+
+    // Transform tagIds to tag_ids for database
+    if (task.tagIds !== undefined) {
+      dbTask.tag_ids = task.tagIds;
+      delete dbTask.tagIds;
+    }
+
+    return this.db.insert<Task>('tasks', dbTask);
   }
 
   async updateTask(id: string, updates: Partial<Task>): Promise<Task | undefined> {
-    return this.db.update<Task>('tasks', id, {
+    // Map camelCase fields to snake_case for database
+    const dbUpdates: any = {
       ...updates,
       updated_at: new Date().toISOString(),
-    });
+    };
+
+    // Transform dueDate to due_date for database
+    if (updates.dueDate !== undefined) {
+      dbUpdates.due_date = updates.dueDate;
+      delete dbUpdates.dueDate;
+    }
+
+    // Transform tagIds to tag_ids for database
+    if (updates.tagIds !== undefined) {
+      dbUpdates.tag_ids = updates.tagIds;
+      delete dbUpdates.tagIds;
+    }
+
+    return this.db.update<Task>('tasks', id, dbUpdates);
   }
 
   async deleteTask(id: string): Promise<void> {
