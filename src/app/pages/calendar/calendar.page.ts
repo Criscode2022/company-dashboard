@@ -1,8 +1,6 @@
 import { CommonModule } from "@angular/common";
 import { Component, OnInit } from "@angular/core";
 import { FormsModule } from "@angular/forms";
-import { addIcons } from "ionicons";
-import { chevronBack, chevronForward, filter } from "ionicons/icons";
 import { Task } from "../../models/task.model";
 import { Project } from "../../models";
 import { TaskService } from "../../services/task.service";
@@ -233,9 +231,7 @@ export class CalendarPage implements OnInit {
   constructor(
     private taskService: TaskService,
     private db: DatabaseService
-  ) {
-    addIcons({ chevronBack, chevronForward, filter });
-  }
+  ) {}
 
   async ngOnInit() {
     await this.loadData();

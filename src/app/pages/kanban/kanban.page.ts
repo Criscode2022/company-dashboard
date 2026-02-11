@@ -1,8 +1,6 @@
 import { CommonModule } from "@angular/common";
-import { Component, OnInit, HostListener } from "@angular/core";
+import { Component, OnInit } from "@angular/core";
 import { FormsModule } from "@angular/forms";
-import { addIcons } from "ionicons";
-import { add, checkmark, filter, chevronForward, chevronBack } from "ionicons/icons";
 import { Task, TaskStatus } from "../../models/task.model";
 import { Project } from "../../models";
 import { TaskService } from "../../services/task.service";
@@ -444,9 +442,7 @@ export class KanbanPage implements OnInit {
   constructor(
     private taskService: TaskService,
     private db: DatabaseService
-  ) {
-    addIcons({ add, checkmark, filter, chevronForward, chevronBack });
-  }
+  ) {}
 
   async ngOnInit() {
     await this.loadData();
