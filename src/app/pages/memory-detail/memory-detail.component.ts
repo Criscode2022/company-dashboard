@@ -1,284 +1,126 @@
 import { CommonModule } from "@angular/common";
 import { Component, OnInit } from "@angular/core";
-import { ActivatedRoute, RouterModule } from "@angular/router";
-import {
-  IonBackButton,
-  IonButton,
-  IonButtons,
-  IonCard,
-  IonCardContent,
-  IonCardHeader,
-  IonCardSubtitle,
-  IonCardTitle,
-  IonCol,
-  IonContent,
-  IonHeader,
-  IonIcon,
-  IonRow,
-  IonSpinner,
-  IonTitle,
-  IonToolbar,
-} from "@ionic/angular/standalone";
-import { DailyMemory } from "../../models";
+import { ActivatedRoute } from "@angular/router";
 import { DatabaseService } from "../../services/database.service";
+import { DailyMemory } from "../../models";
 
-// Simple markdown parser (in real app, use marked library)
 @Component({
   selector: "app-memory-detail",
   standalone: true,
-  imports: [
-    CommonModule,
-    RouterModule,
-    IonHeader,
-    IonToolbar,
-    IonButtons,
-    IonBackButton,
-    IonTitle,
-    IonButton,
-    IonIcon,
-    IonContent,
-    IonSpinner,
-    IonCard,
-    IonCardHeader,
-    IonCardTitle,
-    IonCardSubtitle,
-    IonCardContent,
-    IonRow,
-    IonCol,
-  ],
+  imports: [CommonModule],
   template: `
-    <ion-header>
-      <ion-toolbar color="primary">
-        <ion-buttons slot="start">
-          <ion-back-button defaultHref="/memory"></ion-back-button>
-        </ion-buttons>
-        <ion-title>{{ memory?.date | date: "mediumDate" }}</ion-title>
-        <ion-buttons slot="end">
-          <ion-button (click)="download()">
-            <ion-icon name="download" slot="start"></ion-icon>
-            Download
-          </ion-button>
-        </ion-buttons>
-      </ion-toolbar>
-    </ion-header>
+    <div class="page-container">
+      <div *ngIf="memory" class="memory-detail">
+        <header class="page-header">
+          <span class="date">{{ memory.date | date: 'longDate' }}</span>
+          <div class="stats">
+            <span class="badge">{{ memory.clients_active }} clients</span>
+            <span class="badge">{{ memory.projects_active }} projects</span>
+            <span class="badge">{{ memory.commits_total }} commits</span>
+          </div>
+        </header>
 
-    <ion-content class="ion-padding">
-      <!-- Loading -->
-      <div *ngIf="!memory" class="ion-text-center ion-padding">
-        <ion-spinner></ion-spinner>
-        <p>Loading memory...</p>
+        <h1>{{ memory.title }}</h1>
+
+        <div class="content" [innerHTML]="memory.content | nl2br"></div>
       </div>
 
-      <!-- Memory Content -->
-      <div *ngIf="memory">
-        <!-- Header Card -->
-        <ion-card>
-          <ion-card-header>
-            <ion-card-title>{{ memory.title || "Daily Log" }}</ion-card-title>
-            <ion-card-subtitle>{{
-              memory.date | date: "fullDate"
-            }}</ion-card-subtitle>
-          </ion-card-header>
-
-          <ion-card-content>
-            <ion-row>
-              <ion-col size="4" *ngIf="memory.clients_active > 0">
-                <div class="stat-box">
-                  <div class="stat-number">{{ memory.clients_active }}</div>
-                  <div class="stat-label">Clients</div>
-                </div>
-              </ion-col>
-              <ion-col size="4" *ngIf="memory.projects_active > 0">
-                <div class="stat-box">
-                  <div class="stat-number">{{ memory.projects_active }}</div>
-                  <div class="stat-label">Projects</div>
-                </div>
-              </ion-col>
-              <ion-col size="4" *ngIf="memory.commits_total > 0">
-                <div class="stat-box">
-                  <div class="stat-number">{{ memory.commits_total }}</div>
-                  <div class="stat-label">Commits</div>
-                </div>
-              </ion-col>
-            </ion-row>
-          </ion-card-content>
-        </ion-card>
-
-        <!-- Markdown Content -->
-        <ion-card>
-          <ion-card-header>
-            <ion-card-title>Daily Notes</ion-card-title>
-          </ion-card-header>
-          <ion-card-content>
-            <div class="markdown-content" [innerHTML]="renderedContent"></div>
-          </ion-card-content>
-        </ion-card>
+      <div *ngIf="!memory" class="empty-state">
+        <p>Memory not found</p>
       </div>
-    </ion-content>
+    </div>
   `,
   styles: [
     `
-      .stat-box {
-        text-align: center;
-        padding: 1rem;
-        background: var(--ion-color-light);
-        border-radius: 8px;
+      .page-container {
+        padding: 24px;
+        max-width: 900px;
+        margin: 0 auto;
       }
-      .stat-number {
-        font-size: 2rem;
-        font-weight: bold;
-        color: var(--ion-color-primary);
+      .memory-detail {
+        background: var(--bg-card);
+        border-radius: 12px;
+        border: 1px solid var(--border);
+        box-shadow: var(--shadow-sm);
+        padding: 32px;
       }
-      .stat-label {
-        font-size: 0.875rem;
-        color: var(--ion-color-medium);
+      .page-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 24px;
+        padding-bottom: 16px;
+        border-bottom: 1px solid var(--border);
       }
-      .markdown-content {
-        line-height: 1.6;
+      .date {
+        font-size: 14px;
+        color: var(--text-secondary);
       }
-      .markdown-content h1 {
-        font-size: 1.5rem;
-        font-weight: bold;
-        margin: 1rem 0;
-        color: var(--ion-color-primary);
+      .stats {
+        display: flex;
+        gap: 8px;
       }
-      .markdown-content h2 {
-        font-size: 1.25rem;
-        font-weight: bold;
-        margin: 0.875rem 0;
-        color: var(--ion-color-secondary);
+      .badge {
+        padding: 4px 12px;
+        background: var(--bg-tertiary);
+        color: var(--text-secondary);
+        border-radius: 100px;
+        font-size: 12px;
       }
-      .markdown-content h3 {
-        font-size: 1.125rem;
-        font-weight: 600;
-        margin: 0.75rem 0;
+      h1 {
+        margin: 0 0 24px 0;
+        font-size: 24px;
       }
-      .markdown-content p {
-        margin: 0.5rem 0;
+      .content {
+        line-height: 1.8;
+        color: var(--text-primary);
       }
-      .markdown-content ul,
-      .markdown-content ol {
-        margin: 0.5rem 0;
-        padding-left: 1.5rem;
+      .content ::ng-deep h2 {
+        margin-top: 32px;
+        margin-bottom: 16px;
+        font-size: 20px;
       }
-      .markdown-content li {
-        margin: 0.25rem 0;
+      .content ::ng-deep h3 {
+        margin-top: 24px;
+        margin-bottom: 12px;
+        font-size: 18px;
       }
-      .markdown-content code {
-        background: var(--ion-color-light);
-        padding: 0.125rem 0.375rem;
+      .content ::ng-deep p {
+        margin-bottom: 16px;
+      }
+      .content ::ng-deep ul, .content ::ng-deep ol {
+        margin-bottom: 16px;
+        padding-left: 24px;
+      }
+      .content ::ng-deep li {
+        margin-bottom: 8px;
+      }
+      .content ::ng-deep code {
+        background: var(--bg-tertiary);
+        padding: 2px 6px;
         border-radius: 4px;
         font-family: monospace;
       }
-      .markdown-content pre {
-        background: var(--ion-color-light);
-        padding: 1rem;
-        border-radius: 8px;
-        overflow-x: auto;
-      }
-      .markdown-content blockquote {
-        border-left: 4px solid var(--ion-color-primary);
-        margin: 0.5rem 0;
-        padding-left: 1rem;
-        color: var(--ion-color-medium);
-      }
-      .markdown-content table {
-        width: 100%;
-        border-collapse: collapse;
-        margin: 1rem 0;
-      }
-      .markdown-content th,
-      .markdown-content td {
-        border: 1px solid var(--ion-color-light);
-        padding: 0.5rem;
-        text-align: left;
-      }
-      .markdown-content th {
-        background: var(--ion-color-light);
-        font-weight: 600;
+      .empty-state {
+        text-align: center;
+        padding: 60px;
+        color: var(--text-secondary);
       }
     `,
   ],
 })
 export class MemoryDetailComponent implements OnInit {
-  date: string = "";
   memory?: DailyMemory;
-  renderedContent: string = "";
 
   constructor(
     private route: ActivatedRoute,
-    private db: DatabaseService,
+    private db: DatabaseService
   ) {}
 
   async ngOnInit() {
-    this.date = this.route.snapshot.paramMap.get("date") || "";
-    await this.loadMemory();
-  }
-
-  async loadMemory() {
-    try {
-      this.memory = await this.db.getDailyMemory(this.date);
-      if (this.memory) {
-        this.renderedContent = this.renderMarkdown(this.memory.content);
-      }
-    } catch (error) {
-      console.error("Error loading memory:", error);
-      // Load from mock data
-      this.loadMockData();
+    const date = this.route.snapshot.paramMap.get('date');
+    if (date) {
+      this.memory = await this.db.getDailyMemory(date);
     }
-  }
-
-  loadMockData() {
-    this.memory = {
-      id: "1",
-      date: this.date,
-      filename: `${this.date}.md`,
-      title: "Sample Memory Entry",
-      content: "# Sample Content\n\nThis is a sample memory entry.",
-      clients_active: 2,
-      projects_active: 2,
-      commits_total: 6,
-      new_features: 3,
-      bugs_fixed: 0,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-    };
-    this.renderedContent = this.renderMarkdown(this.memory.content);
-  }
-
-  renderMarkdown(content: string): string {
-    // Simple markdown parser (in production, use 'marked' library)
-    let html = content
-      // Headers
-      .replace(/^# (.+)$/gm, "<h1>$1</h1>")
-      .replace(/^## (.+)$/gm, "<h2>$1</h2>")
-      .replace(/^### (.+)$/gm, "<h3>$1</h3>")
-      // Bold and italic
-      .replace(/\*\*\*(.+?)\*\*\*/g, "<strong><em>$1</em></strong>")
-      .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
-      .replace(/\*(.+?)\*/g, "<em>$1</em>")
-      // Code blocks
-      .replace(/```([\s\S]*?)```/g, "<pre><code>$1</code></pre>")
-      .replace(/`([^`]+)`/g, "<code>$1</code>")
-      // Lists
-      .replace(/^\* (.+)$/gm, "<li>$1</li>")
-      // Line breaks
-      .replace(/\n/g, "<br>");
-
-    return html;
-  }
-
-  download() {
-    if (!this.memory) return;
-
-    const blob = new Blob([this.memory.content], { type: "text/markdown" });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = this.memory.filename;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    window.URL.revokeObjectURL(url);
   }
 }

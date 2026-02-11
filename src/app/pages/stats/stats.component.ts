@@ -1,233 +1,143 @@
 import { CommonModule } from "@angular/common";
 import { Component, OnInit } from "@angular/core";
-import {
-  IonBadge,
-  IonButtons,
-  IonCard,
-  IonCardContent,
-  IonCardHeader,
-  IonCardTitle,
-  IonCol,
-  IonContent,
-  IonGrid,
-  IonHeader,
-  IonItem,
-  IonLabel,
-  IonList,
-  IonMenuButton,
-  IonNote,
-  IonRow,
-  IonTitle,
-  IonToolbar,
-} from "@ionic/angular/standalone";
-import { CompanyStats } from "../../models";
 import { DatabaseService } from "../../services/database.service";
+import { CompanyStats } from "../../models";
 
 @Component({
   selector: "app-stats",
   standalone: true,
-  imports: [
-    CommonModule,
-    IonHeader,
-    IonToolbar,
-    IonButtons,
-    IonMenuButton,
-    IonTitle,
-    IonContent,
-    IonGrid,
-    IonRow,
-    IonCol,
-    IonCard,
-    IonCardContent,
-    IonCardHeader,
-    IonCardTitle,
-    IonList,
-    IonItem,
-    IonLabel,
-    IonNote,
-    IonBadge,
-  ],
+  imports: [CommonModule],
   template: `
-    <ion-header>
-      <ion-toolbar color="primary">
-        <ion-buttons slot="start">
-          <ion-menu-button></ion-menu-button>
-        </ion-buttons>
-        <ion-title>Statistics</ion-title>
-      </ion-toolbar>
-    </ion-header>
+    <div class="page-container">
+      <header class="page-header">
+        <h1>📊 Statistics</h1>
+      </header>
 
-    <ion-content class="ion-padding">
-      <!-- Overview Cards -->
-      <ion-grid>
-        <ion-row>
-          <ion-col size="6" sizeMd="3">
-            <ion-card color="primary">
-              <ion-card-content class="text-center">
-                <h1>{{ latestStats?.total_clients || 0 }}</h1>
-                <p>Total Clients</p>
-              </ion-card-content>
-            </ion-card>
-          </ion-col>
+      <div *ngIf="stats.length > 0" class="stats-container">
+        <div class="stats-summary">
+          <div class="summary-card">
+            <span class="value">{{ latestStats?.total_clients }}</span>
+            <span class="label">Total Clients</span>
+          </div>
+          <div class="summary-card">
+            <span class="value">{{ latestStats?.total_projects }}</span>
+            <span class="label">Total Projects</span>
+          </div>
+          <div class="summary-card">
+            <span class="value">${{ latestStats?.total_revenue | number:'1.0-0' }}</span>
+            <span class="label">Total Revenue</span>
+          </div>
+        </div>
 
-          <ion-col size="6" sizeMd="3">
-            <ion-card color="success">
-              <ion-card-content class="text-center">
-                <h1>{{ latestStats?.total_projects || 0 }}</h1>
-                <p>Total Projects</p>
-              </ion-card-content>
-            </ion-card>
-          </ion-col>
+        <h2>Daily History</h2>
+        <div class="stats-table">
+          <div class="table-header">
+            <span>Date</span>
+            <span>Clients</span>
+            <span>Projects</span>
+            <span>Revenue</span>
+          </div>
+          <div *ngFor="let stat of stats" class="table-row">
+            <span>{{ stat.date | date:'mediumDate' }}</span>
+            <span>{{ stat.total_clients }}</span>
+            <span>{{ stat.total_projects }}</span>
+            <span>${{ stat.total_revenue | number:'1.0-0' }}</span>
+          </div>
+        </div>
+      </div>
 
-          <ion-col size="6" sizeMd="3">
-            <ion-card color="warning">
-              <ion-card-content class="text-center">
-                <h1>{{ latestStats?.total_commits || 0 }}</h1>
-                <p>Total Commits</p>
-              </ion-card-content>
-            </ion-card>
-          </ion-col>
-
-          <ion-col size="6" sizeMd="3">
-            <ion-card color="tertiary">
-              <ion-card-content class="text-center">
-                <h1>{{ latestStats?.total_features || 0 }}</h1>
-                <p>Features Delivered</p>
-              </ion-card-content>
-            </ion-card>
-          </ion-col>
-        </ion-row>
-      </ion-grid>
-
-      <!-- Development Activity -->
-      <ion-card>
-        <ion-card-header>
-          <ion-card-title>30-Day Development Activity</ion-card-title>
-        </ion-card-header>
-
-        <ion-card-content>
-          <ion-list>
-            <ion-item *ngFor="let stat of stats.slice(-7)">
-              <ion-label>
-                <h3>{{ stat.date | date: "mediumDate" }}</h3>
-              </ion-label>
-              <ion-note slot="end">
-                {{ stat.total_commits }} commits &#183;
-                {{ stat.total_features }} features
-              </ion-note>
-            </ion-item>
-          </ion-list>
-        </ion-card-content>
-      </ion-card>
-
-      <!-- Project Breakdown -->
-      <ion-card>
-        <ion-card-header>
-          <ion-card-title>Project Status Breakdown</ion-card-title>
-        </ion-card-header>
-
-        <ion-card-content>
-          <ion-list>
-            <ion-item>
-              <ion-label>Discovery</ion-label>
-              <ion-badge color="medium" slot="end">{{
-                projectStatusCounts.discovery
-              }}</ion-badge>
-            </ion-item>
-            <ion-item>
-              <ion-label>In Progress</ion-label>
-              <ion-badge color="warning" slot="end">{{
-                projectStatusCounts.in_progress
-              }}</ion-badge>
-            </ion-item>
-            <ion-item>
-              <ion-label>Beta</ion-label>
-              <ion-badge color="tertiary" slot="end">{{
-                projectStatusCounts.beta
-              }}</ion-badge>
-            </ion-item>
-            <ion-item>
-              <ion-label>Production</ion-label>
-              <ion-badge color="success" slot="end">{{
-                projectStatusCounts.production
-              }}</ion-badge>
-            </ion-item>
-            <ion-item>
-              <ion-label>Maintenance</ion-label>
-              <ion-badge color="primary" slot="end">{{
-                projectStatusCounts.maintenance
-              }}</ion-badge>
-            </ion-item>
-          </ion-list>
-        </ion-card-content>
-      </ion-card>
-    </ion-content>
+      <div *ngIf="stats.length === 0" class="empty-state">
+        <p>No statistics available</p>
+      </div>
+    </div>
   `,
   styles: [
     `
-      .text-center {
-        text-align: center;
+      .page-container {
+        padding: 24px;
+        max-width: 1200px;
+        margin: 0 auto;
       }
-      h1 {
-        font-size: 2.5rem;
-        font-weight: bold;
-        margin: 0.5rem 0;
+      .page-header {
+        margin-bottom: 24px;
+      }
+      .page-header h1 {
+        margin: 0;
+      }
+      .stats-summary {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 20px;
+        margin-bottom: 32px;
+      }
+      .summary-card {
+        background: var(--bg-card);
+        border-radius: 12px;
+        padding: 24px;
+        text-align: center;
+        border: 1px solid var(--border);
+        box-shadow: var(--shadow-sm);
+      }
+      .summary-card .value {
+        display: block;
+        font-size: 32px;
+        font-weight: 700;
+        color: var(--accent);
+        margin-bottom: 8px;
+      }
+      .summary-card .label {
+        color: var(--text-secondary);
+        font-size: 14px;
+      }
+      h2 {
+        margin: 32px 0 16px 0;
+        font-size: 20px;
+      }
+      .stats-table {
+        background: var(--bg-card);
+        border-radius: 12px;
+        border: 1px solid var(--border);
+        overflow: hidden;
+      }
+      .table-header {
+        display: grid;
+        grid-template-columns: 2fr 1fr 1fr 1fr;
+        gap: 16px;
+        padding: 16px 20px;
+        background: var(--bg-tertiary);
+        font-weight: 600;
+        font-size: 14px;
+        color: var(--text-secondary);
+      }
+      .table-row {
+        display: grid;
+        grid-template-columns: 2fr 1fr 1fr 1fr;
+        gap: 16px;
+        padding: 16px 20px;
+        border-top: 1px solid var(--border);
+        font-size: 14px;
+      }
+      .table-row:hover {
+        background: var(--bg-hover);
+      }
+      .empty-state {
+        text-align: center;
+        padding: 60px;
+        color: var(--text-secondary);
       }
     `,
   ],
 })
 export class StatsComponent implements OnInit {
   stats: CompanyStats[] = [];
-  latestStats?: CompanyStats;
-  projectStatusCounts = {
-    discovery: 0,
-    in_progress: 0,
-    beta: 0,
-    production: 0,
-    maintenance: 0,
-    archived: 0,
-  };
 
   constructor(private db: DatabaseService) {}
 
   async ngOnInit() {
-    await this.loadStats();
+    this.stats = await this.db.getCompanyStats(30);
   }
 
-  async loadStats() {
-    try {
-      this.stats = await this.db.getCompanyStats(30);
-      this.latestStats = await this.db.getLatestStats();
-    } catch (error) {
-      console.error("Error loading stats:", error);
-      this.loadMockData();
-    }
-  }
-
-  loadMockData() {
-    this.latestStats = {
-      id: "1",
-      date: new Date().toISOString().split("T")[0],
-      total_clients: 2,
-      active_clients: 2,
-      new_clients: 0,
-      total_projects: 2,
-      active_projects: 2,
-      completed_projects: 0,
-      total_commits: 26,
-      total_features: 18,
-      total_bugs_fixed: 8,
-      total_lines_of_code: 4500,
-      created_at: new Date().toISOString(),
-    };
-
-    this.projectStatusCounts = {
-      discovery: 0,
-      in_progress: 1,
-      beta: 0,
-      production: 1,
-      maintenance: 0,
-      archived: 0,
-    };
+  get latestStats(): CompanyStats | undefined {
+    return this.stats[0];
   }
 }

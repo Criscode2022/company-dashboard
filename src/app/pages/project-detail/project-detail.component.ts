@@ -1,255 +1,181 @@
 import { CommonModule } from "@angular/common";
 import { Component, OnInit } from "@angular/core";
 import { ActivatedRoute } from "@angular/router";
-import {
-  IonBackButton,
-  IonBadge,
-  IonButtons,
-  IonCard,
-  IonCardContent,
-  IonCardHeader,
-  IonCardSubtitle,
-  IonCardTitle,
-  IonCol,
-  IonContent,
-  IonHeader,
-  IonIcon,
-  IonItem,
-  IonLabel,
-  IonList,
-  IonRow,
-  IonTitle,
-  IonToolbar,
-} from "@ionic/angular/standalone";
-import { DailyProgress, Feature, Project, Version } from "../../models";
 import { DatabaseService } from "../../services/database.service";
+import { Project, Feature, Version } from "../../models";
 
 @Component({
   selector: "app-project-detail",
   standalone: true,
-  imports: [
-    CommonModule,
-    IonHeader,
-    IonToolbar,
-    IonButtons,
-    IonBackButton,
-    IonTitle,
-    IonContent,
-    IonCard,
-    IonCardHeader,
-    IonCardTitle,
-    IonCardSubtitle,
-    IonCardContent,
-    IonList,
-    IonItem,
-    IonIcon,
-    IonLabel,
-    IonBadge,
-    IonRow,
-    IonCol,
-  ],
+  imports: [CommonModule],
   template: `
-    <ion-header>
-      <ion-toolbar color="primary">
-        <ion-buttons slot="start">
-          <ion-back-button></ion-back-button>
-        </ion-buttons>
-        <ion-title>{{ project?.name || "Project Details" }}</ion-title>
-      </ion-toolbar>
-    </ion-header>
+    <div class="page-container">
+      <div *ngIf="project" class="project-detail">
+        <header class="page-header">
+          <div>
+            <h1>{{ project.name }}</h1>
+            <span class="badge" [class]="'badge-' + getStatusColor(project.status)">
+              {{ project.status | titlecase }}
+            </span>
+          </div>
+          <span *ngIf="project.budget" class="budget">${{ project.budget | number }}</span>
+        </header>
 
-    <ion-content class="ion-padding" *ngIf="project">
-      <!-- Project Overview -->
-      <ion-card>
-        <ion-card-header>
-          <ion-card-title>{{ project.name }}</ion-card-title>
-          <ion-card-subtitle>{{ project.client_name }}</ion-card-subtitle>
-        </ion-card-header>
+        <p *ngIf="project.description" class="description">{{ project.description }}</p>
 
-        <ion-card-content>
-          <p *ngIf="project.description">{{ project.description }}</p>
+        <div class="info-grid">
+          <div class="info-card" *ngIf="project.start_date">
+            <span class="label">Start Date</span>
+            <span class="value">{{ project.start_date | date }}</span>
+          </div>
+          <div class="info-card" *ngIf="project.deadline">
+            <span class="label">Deadline</span>
+            <span class="value">{{ project.deadline | date }}</span>
+          </div>
+        </div>
 
-          <ion-row class="ion-margin-top">
-            <ion-col size="6">
-              <ion-label>
-                <strong>Status:</strong>
-                <ion-badge [color]="getStatusColor(project.status)">
-                  {{ project.status | titlecase }}
-                </ion-badge>
-              </ion-label>
-            </ion-col>
-            <ion-col size="6" *ngIf="project.budget">
-              <ion-label>
-                <strong>Budget:</strong> {{ project.budget | number }}
-              </ion-label>
-            </ion-col>
-          </ion-row>
-
-          <!-- Links -->
-          <ion-list lines="none" class="ion-margin-top">
-            <ion-item
-              *ngIf="project.repo_url"
-              [href]="project.repo_url"
-              target="_blank"
-            >
-              <ion-icon name="logo-github" slot="start" color="dark"></ion-icon>
-              <ion-label>Repository</ion-label>
-              <ion-icon name="open-outline" slot="end"></ion-icon>
-            </ion-item>
-
-            <ion-item
-              *ngIf="project.production_url"
-              [href]="project.production_url"
-              target="_blank"
-            >
-              <ion-icon name="globe" slot="start" color="primary"></ion-icon>
-              <ion-label>Production Site</ion-label>
-              <ion-icon name="open-outline" slot="end"></ion-icon>
-            </ion-item>
-          </ion-list>
-        </ion-card-content>
-      </ion-card>
-
-      <!-- Features -->
-      <ion-card>
-        <ion-card-header>
-          <ion-card-title>Features</ion-card-title>
-          <ion-badge color="primary" slot="end">{{
-            features.length
-          }}</ion-badge>
-        </ion-card-header>
-
-        <ion-list>
-          <ion-item *ngFor="let feature of features">
-            <ion-label>
-              <h3>{{ feature.name }}</h3>
-              <p *ngIf="feature.description">{{ feature.description }}</p>
-            </ion-label>
-            <ion-badge
-              [color]="getFeatureStatusColor(feature.status)"
-              slot="end"
-            >
+        <h2>Features</h2>
+        <div class="features-list">
+          <div *ngFor="let feature of features" class="feature-item">
+            <span class="feature-name">{{ feature.name }}</span>
+            <span class="badge" [class]="'badge-' + getFeatureStatusColor(feature.status)">
               {{ feature.status | titlecase }}
-            </ion-badge>
-          </ion-item>
-        </ion-list>
-      </ion-card>
+            </span>
+          </div>
+        </div>
+      </div>
 
-      <!-- Versions -->
-      <ion-card>
-        <ion-card-header>
-          <ion-card-title>Versions</ion-card-title>
-        </ion-card-header>
-
-        <ion-list>
-          <ion-item *ngFor="let version of versions">
-            <ion-label>
-              <h3>
-                {{ version.version_number }}
-                <ion-badge *ngIf="version.is_production" color="success"
-                  >Production</ion-badge
-                >
-              </h3>
-              <p *ngIf="version.release_date">
-                Released: {{ version.release_date | date }}
-              </p>
-            </ion-label>
-          </ion-item>
-        </ion-list>
-      </ion-card>
-    </ion-content>
+      <div *ngIf="!project" class="empty-state">
+        <p>Project not found</p>
+      </div>
+    </div>
   `,
+  styles: [
+    `
+      .page-container {
+        padding: 24px;
+        max-width: 1200px;
+        margin: 0 auto;
+      }
+      .page-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 24px;
+      }
+      .page-header h1 {
+        margin: 0 0 12px 0;
+      }
+      .badge {
+        padding: 4px 12px;
+        border-radius: 100px;
+        font-size: 12px;
+        font-weight: 600;
+        text-transform: uppercase;
+      }
+      .badge-success { background: var(--success-bg); color: var(--success-text); }
+      .badge-warning { background: var(--warning-bg); color: var(--warning-text); }
+      .badge-primary { background: var(--accent); color: white; }
+      .badge-medium { background: var(--bg-hover); color: var(--text-secondary); }
+      .budget {
+        font-size: 24px;
+        font-weight: 700;
+        color: var(--accent);
+      }
+      .description {
+        color: var(--text-secondary);
+        margin-bottom: 24px;
+        line-height: 1.6;
+      }
+      .info-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        gap: 16px;
+        margin-bottom: 32px;
+      }
+      .info-card {
+        background: var(--bg-card);
+        border-radius: 8px;
+        padding: 16px;
+        border: 1px solid var(--border);
+      }
+      .info-card .label {
+        display: block;
+        font-size: 12px;
+        color: var(--text-tertiary);
+        text-transform: uppercase;
+        margin-bottom: 4px;
+      }
+      .info-card .value {
+        font-size: 16px;
+        color: var(--text-primary);
+      }
+      h2 {
+        margin: 32px 0 16px 0;
+        font-size: 20px;
+      }
+      .features-list {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+      .feature-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 16px;
+        background: var(--bg-card);
+        border-radius: 8px;
+        border: 1px solid var(--border);
+      }
+      .feature-name {
+        font-weight: 500;
+      }
+      .empty-state {
+        text-align: center;
+        padding: 60px;
+        color: var(--text-secondary);
+      }
+    `,
+  ],
 })
 export class ProjectDetailComponent implements OnInit {
-  projectId: string = "";
   project?: Project;
   features: Feature[] = [];
   versions: Version[] = [];
-  progress: DailyProgress[] = [];
 
   constructor(
     private route: ActivatedRoute,
-    private db: DatabaseService,
+    private db: DatabaseService
   ) {}
 
   async ngOnInit() {
-    this.projectId = this.route.snapshot.paramMap.get("id") || "";
-    await this.loadData();
-  }
-
-  async loadData() {
-    try {
-      this.project = await this.db.getProject(this.projectId);
-      this.features = await this.db.getFeatures(this.projectId);
-      this.versions = await this.db.getVersions(this.projectId);
-      this.progress = await this.db.getDailyProgress(this.projectId, 30);
-    } catch (error) {
-      console.error("Error loading project:", error);
-      this.loadMockData();
+    const id = this.route.snapshot.paramMap.get('id');
+    if (id) {
+      this.project = await this.db.getProject(id);
+      if (this.project) {
+        this.features = await this.db.getFeatures(id);
+        this.versions = await this.db.getVersions(id);
+      }
     }
-  }
-
-  loadMockData() {
-    this.project = {
-      id: this.projectId,
-      client_id: "1",
-      name: "GreenFork Scheduler",
-      description: "Staff scheduling and time tracking for restaurants",
-      status: "production",
-      repo_url: "https://github.com/Criscode2022/greenfork-scheduler",
-      production_url: "https://greenfork-scheduler.netlify.app",
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-    };
-
-    this.features = [
-      {
-        id: "1",
-        project_id: this.projectId,
-        name: "Digital Scheduling",
-        status: "completed",
-        priority: 1,
-        created_at: new Date().toISOString(),
-      },
-      {
-        id: "2",
-        project_id: this.projectId,
-        name: "GPS Time Clock",
-        status: "completed",
-        priority: 2,
-        created_at: new Date().toISOString(),
-      },
-    ];
-
-    this.versions = [
-      {
-        id: "1",
-        project_id: this.projectId,
-        version_number: "1.0.0",
-        is_production: true,
-        created_at: new Date().toISOString(),
-      },
-    ];
   }
 
   getStatusColor(status: string): string {
     const colors: Record<string, string> = {
-      discovery: "medium",
+      active: "success",
+      paused: "warning",
+      completed: "primary",
       in_progress: "warning",
-      beta: "tertiary",
       production: "success",
-      maintenance: "primary",
-      archived: "medium",
     };
     return colors[status] || "medium";
   }
 
   getFeatureStatusColor(status: string): string {
     const colors: Record<string, string> = {
-      planned: "medium",
-      in_progress: "warning",
       completed: "success",
-      deferred: "danger",
+      in_progress: "warning",
+      pending: "medium",
     };
     return colors[status] || "medium";
   }
