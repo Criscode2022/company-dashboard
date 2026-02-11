@@ -2,126 +2,181 @@ import { CommonModule } from "@angular/common";
 import { Component, inject } from "@angular/core";
 import { FormsModule } from "@angular/forms";
 import { Router, RouterModule } from "@angular/router";
-import {
-  IonButton,
-  IonContent,
-  IonIcon,
-  IonInput,
-  IonItem,
-  IonSpinner,
-  IonText,
-} from "@ionic/angular/standalone";
-import { addIcons } from "ionicons";
-import { business } from "ionicons/icons";
 import { authClient } from "../../../lib/auth";
 import { AuthService } from "../../services/auth.service";
 
 @Component({
   selector: "app-login",
   template: `
-    <ion-content class="ion-padding">
+    <div class="login-page">
       <div class="login-container">
         <div class="login-header">
-          <ion-icon name="business" class="logo-icon"></ion-icon>
+          <svg class="logo-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+            <polyline points="9 22 9 12 15 12 15 22"></polyline>
+          </svg>
           <h1>Company Dashboard</h1>
           <p>Sign in to manage your projects</p>
         </div>
 
         <div class="login-form">
-          <ion-item>
-            <ion-input
+          <div class="form-group">
+            <input
               type="email"
               placeholder="Email"
               [(ngModel)]="email"
-              label="Email"
-              labelPlacement="floating"
               (keyup.enter)="login()"
-            ></ion-input>
-          </ion-item>
+              class="form-input"
+            />
+          </div>
 
-          <ion-item>
-            <ion-input
+          <div class="form-group">
+            <input
               type="password"
               placeholder="Password"
               [(ngModel)]="password"
-              label="Password"
-              labelPlacement="floating"
               (keyup.enter)="login()"
-            ></ion-input>
-          </ion-item>
+              class="form-input"
+            />
+          </div>
 
-          <ion-text color="danger" *ngIf="errorMessage">
-            <p class="error-message">{{ errorMessage }}</p>
-          </ion-text>
+          <p class="error-message" *ngIf="errorMessage">{{ errorMessage }}</p>
 
-          <ion-button
-            expand="block"
+          <button
+            class="btn btn-primary btn-block"
             (click)="login()"
-            class="login-button"
             [disabled]="isLoading"
           >
-            <ion-spinner *ngIf="isLoading" name="crescent"></ion-spinner>
+            <span *ngIf="isLoading" class="spinner"></span>
             <span *ngIf="!isLoading">Sign In</span>
-          </ion-button>
+          </button>
 
           <div class="signup-link">
             <p>Don't have an account?</p>
-            <ion-button expand="block" fill="outline" routerLink="/signup">
-              Create Account
-            </ion-button>
+            <a routerLink="/signup" class="btn btn-secondary btn-block">Create Account</a>
           </div>
         </div>
       </div>
-    </ion-content>
+    </div>
   `,
   standalone: true,
-  imports: [
-    CommonModule,
-    FormsModule,
-    RouterModule,
-    IonContent,
-    IonItem,
-    IonInput,
-    IonButton,
-    IonText,
-    IonSpinner,
-    IonIcon,
-  ],
+  imports: [CommonModule, FormsModule, RouterModule],
   styles: [
     `
+      .login-page {
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: var(--bg-primary);
+        padding: 24px;
+      }
       .login-container {
+        width: 100%;
         max-width: 400px;
-        margin: 0 auto;
-        padding-top: 60px;
       }
       .login-header {
         text-align: center;
         margin-bottom: 40px;
       }
       .logo-icon {
-        font-size: 64px;
-        color: var(--ion-color-primary);
+        width: 64px;
+        height: 64px;
+        color: var(--accent);
+        margin-bottom: 16px;
       }
       .login-header h1 {
-        margin: 16px 0 8px;
+        margin: 0 0 8px 0;
         font-size: 28px;
+        color: var(--text-primary);
+      }
+      .login-header p {
+        color: var(--text-secondary);
+        margin: 0;
       }
       .login-form {
         display: flex;
         flex-direction: column;
         gap: 16px;
       }
+      .form-group {
+        margin: 0;
+      }
+      .form-input {
+        width: 100%;
+        padding: 14px 16px;
+        border: 2px solid var(--border);
+        border-radius: 10px;
+        font-size: 16px;
+        background: var(--bg-secondary);
+        color: var(--text-primary);
+        transition: border-color 0.2s;
+      }
+      .form-input:focus {
+        outline: none;
+        border-color: var(--accent);
+      }
+      .btn {
+        padding: 14px 24px;
+        border-radius: 10px;
+        font-size: 16px;
+        font-weight: 600;
+        cursor: pointer;
+        border: none;
+        text-decoration: none;
+        text-align: center;
+        display: inline-block;
+        transition: all 0.2s;
+      }
+      .btn-primary {
+        background: var(--accent);
+        color: white;
+      }
+      .btn-primary:hover:not(:disabled) {
+        background: var(--accent-hover);
+        transform: translateY(-1px);
+      }
+      .btn-primary:disabled {
+        opacity: 0.7;
+        cursor: not-allowed;
+      }
+      .btn-secondary {
+        background: var(--bg-tertiary);
+        color: var(--text-primary);
+        border: 2px solid var(--border);
+      }
+      .btn-secondary:hover {
+        border-color: var(--accent);
+      }
+      .btn-block {
+        display: block;
+        width: 100%;
+      }
       .error-message {
         text-align: center;
-        margin: 8px 0;
+        color: var(--danger);
+        margin: 0;
+        font-size: 14px;
       }
       .signup-link {
         text-align: center;
         margin-top: 24px;
       }
       .signup-link p {
-        margin-bottom: 8px;
-        color: var(--ion-color-medium);
+        margin-bottom: 12px;
+        color: var(--text-secondary);
+      }
+      .spinner {
+        display: inline-block;
+        width: 20px;
+        height: 20px;
+        border: 2px solid rgba(255,255,255,0.3);
+        border-radius: 50%;
+        border-top-color: white;
+        animation: spin 0.8s linear infinite;
+      }
+      @keyframes spin {
+        to { transform: rotate(360deg); }
       }
     `,
   ],
@@ -134,10 +189,6 @@ export class LoginPage {
   password = "";
   errorMessage = "";
   isLoading = false;
-
-  constructor() {
-    addIcons({ business });
-  }
 
   private isJwt(token: string | null | undefined): token is string {
     if (!token) return false;
@@ -181,18 +232,7 @@ export class LoginPage {
 
       if (data?.user) {
         const neonUser = data.user as any;
-
         let accessToken = this.extractToken(data);
-
-        if (!accessToken) {
-          try {
-            const authWithJwt = authClient as unknown as {
-              getJWTToken?: () => Promise<string | null>;
-            };
-            const jwt = await authWithJwt.getJWTToken?.();
-            if (this.isJwt(jwt)) accessToken = jwt;
-          } catch {}
-        }
 
         if (!accessToken) {
           try {
@@ -213,8 +253,7 @@ export class LoginPage {
 
         const verified = await this.authService.verifySession();
         if (!verified) {
-          this.errorMessage =
-            "Login succeeded but session could not be verified.";
+          this.errorMessage = "Login succeeded but session could not be verified.";
           return;
         }
 
@@ -228,16 +267,10 @@ export class LoginPage {
   }
 
   private getErrorMessage(error: any): string {
-    if (
-      error.code === "INVALID_CREDENTIALS" ||
-      error.message?.includes("credentials")
-    ) {
+    if (error.code === "INVALID_CREDENTIALS" || error.message?.includes("credentials")) {
       return "Invalid email or password";
     }
-    if (
-      error.code === "USER_NOT_FOUND" ||
-      error.message?.includes("not found")
-    ) {
+    if (error.code === "USER_NOT_FOUND" || error.message?.includes("not found")) {
       return "User not found";
     }
     return error.message || "Login failed";

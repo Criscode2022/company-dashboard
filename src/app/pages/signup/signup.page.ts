@@ -1,191 +1,208 @@
-import { CommonModule } from '@angular/common';
-import { Component, inject } from '@angular/core';
-import { FormsModule } from '@angular/forms';
-import { Router, RouterModule } from '@angular/router';
-import {
-  IonButton,
-  IonContent,
-  IonIcon,
-  IonInput,
-  IonItem,
-  IonSpinner,
-  IonText,
-} from '@ionic/angular/standalone';
-import { addIcons } from 'ionicons';
-import { business } from 'ionicons/icons';
-import { authClient } from '../../../lib/auth';
-import { AuthService } from '../../services/auth.service';
+import { CommonModule } from "@angular/common";
+import { Component, inject } from "@angular/core";
+import { FormsModule } from "@angular/forms";
+import { Router, RouterModule } from "@angular/router";
+import { authClient } from "../../../lib/auth";
+import { AuthService } from "../../services/auth.service";
 
 @Component({
-  selector: 'app-signup',
+  selector: "app-signup",
   template: `
-    <ion-content class="ion-padding">
+    <div class="signup-page">
       <div class="signup-container">
         <div class="signup-header">
-          <ion-icon name="business" class="logo-icon"></ion-icon>
+          <svg class="logo-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+            <polyline points="9 22 9 12 15 12 15 22"></polyline>
+          </svg>
           <h1>Create Account</h1>
-          <p>Join your company dashboard</p>
+          <p>Join Company Dashboard</p>
         </div>
 
         <div class="signup-form">
-          <ion-item>
-            <ion-input
+          <div class="form-group">
+            <input
               type="text"
-              placeholder="Your name"
+              placeholder="Full Name"
               [(ngModel)]="name"
-              label="Full Name"
-              labelPlacement="floating"
-            ></ion-input>
-          </ion-item>
+              class="form-input"
+            />
+          </div>
 
-          <ion-item>
-            <ion-input
+          <div class="form-group">
+            <input
               type="email"
               placeholder="Email"
               [(ngModel)]="email"
-              label="Email"
-              labelPlacement="floating"
-            ></ion-input>
-          </ion-item>
+              class="form-input"
+            />
+          </div>
 
-          <ion-item>
-            <ion-input
+          <div class="form-group">
+            <input
               type="password"
               placeholder="Password"
               [(ngModel)]="password"
-              label="Password"
-              labelPlacement="floating"
-            ></ion-input>
-          </ion-item>
+              class="form-input"
+            />
+          </div>
 
-          <ion-item>
-            <ion-input
-              type="password"
-              placeholder="Confirm password"
-              [(ngModel)]="confirmPassword"
-              label="Confirm Password"
-              labelPlacement="floating"
-            ></ion-input>
-          </ion-item>
+          <p class="error-message" *ngIf="errorMessage">{{ errorMessage }}</p>
 
-          <ion-text color="danger" *ngIf="errorMessage">
-            <p class="error-message">{{ errorMessage }}</p>
-          </ion-text>
-
-          <ion-button
-            expand="block"
+          <button
+            class="btn btn-primary btn-block"
             (click)="signup()"
-            class="signup-button"
             [disabled]="isLoading"
           >
-            <ion-spinner *ngIf="isLoading" name="crescent"></ion-spinner>
+            <span *ngIf="isLoading" class="spinner"></span>
             <span *ngIf="!isLoading">Create Account</span>
-          </ion-button>
+          </button>
 
           <div class="login-link">
             <p>Already have an account?</p>
-            <ion-button expand="block" fill="outline" routerLink="/login">
-              Sign In
-            </ion-button>
+            <a routerLink="/login" class="btn btn-secondary btn-block">Sign In</a>
           </div>
         </div>
       </div>
-    </ion-content>
+    </div>
   `,
   standalone: true,
-  imports: [
-    CommonModule,
-    FormsModule,
-    RouterModule,
-    IonContent,
-    IonItem,
-    IonInput,
-    IonButton,
-    IonText,
-    IonSpinner,
-    IonIcon,
+  imports: [CommonModule, FormsModule, RouterModule],
+  styles: [
+    `
+      .signup-page {
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: var(--bg-primary);
+        padding: 24px;
+      }
+      .signup-container {
+        width: 100%;
+        max-width: 400px;
+      }
+      .signup-header {
+        text-align: center;
+        margin-bottom: 40px;
+      }
+      .logo-icon {
+        width: 64px;
+        height: 64px;
+        color: var(--accent);
+        margin-bottom: 16px;
+      }
+      .signup-header h1 {
+        margin: 0 0 8px 0;
+        font-size: 28px;
+        color: var(--text-primary);
+      }
+      .signup-header p {
+        color: var(--text-secondary);
+        margin: 0;
+      }
+      .signup-form {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+      }
+      .form-group {
+        margin: 0;
+      }
+      .form-input {
+        width: 100%;
+        padding: 14px 16px;
+        border: 2px solid var(--border);
+        border-radius: 10px;
+        font-size: 16px;
+        background: var(--bg-secondary);
+        color: var(--text-primary);
+        transition: border-color 0.2s;
+      }
+      .form-input:focus {
+        outline: none;
+        border-color: var(--accent);
+      }
+      .btn {
+        padding: 14px 24px;
+        border-radius: 10px;
+        font-size: 16px;
+        font-weight: 600;
+        cursor: pointer;
+        border: none;
+        text-decoration: none;
+        text-align: center;
+        display: inline-block;
+        transition: all 0.2s;
+      }
+      .btn-primary {
+        background: var(--accent);
+        color: white;
+      }
+      .btn-primary:hover:not(:disabled) {
+        background: var(--accent-hover);
+        transform: translateY(-1px);
+      }
+      .btn-primary:disabled {
+        opacity: 0.7;
+        cursor: not-allowed;
+      }
+      .btn-secondary {
+        background: var(--bg-tertiary);
+        color: var(--text-primary);
+        border: 2px solid var(--border);
+      }
+      .btn-secondary:hover {
+        border-color: var(--accent);
+      }
+      .btn-block {
+        display: block;
+        width: 100%;
+      }
+      .error-message {
+        text-align: center;
+        color: var(--danger);
+        margin: 0;
+        font-size: 14px;
+      }
+      .login-link {
+        text-align: center;
+        margin-top: 24px;
+      }
+      .login-link p {
+        margin-bottom: 12px;
+        color: var(--text-secondary);
+      }
+      .spinner {
+        display: inline-block;
+        width: 20px;
+        height: 20px;
+        border: 2px solid rgba(255,255,255,0.3);
+        border-radius: 50%;
+        border-top-color: white;
+        animation: spin 0.8s linear infinite;
+      }
+      @keyframes spin {
+        to { transform: rotate(360deg); }
+      }
+    `,
   ],
-  styles: [`
-    .signup-container {
-      max-width: 400px;
-      margin: 0 auto;
-      padding-top: 40px;
-    }
-    .signup-header {
-      text-align: center;
-      margin-bottom: 40px;
-    }
-    .logo-icon {
-      font-size: 64px;
-      color: var(--ion-color-primary);
-    }
-    .signup-header h1 {
-      margin: 16px 0 8px;
-      font-size: 28px;
-    }
-    .signup-form {
-      display: flex;
-      flex-direction: column;
-      gap: 16px;
-    }
-    .error-message {
-      text-align: center;
-      margin: 8px 0;
-    }
-    .login-link {
-      text-align: center;
-      margin-top: 24px;
-    }
-    .login-link p {
-      margin-bottom: 8px;
-      color: var(--ion-color-medium);
-    }
-  `],
 })
 export class SignupPage {
   private router = inject(Router);
   private authService = inject(AuthService);
 
-  name = '';
-  email = '';
-  password = '';
-  confirmPassword = '';
-  errorMessage = '';
+  name = "";
+  email = "";
+  password = "";
+  errorMessage = "";
   isLoading = false;
 
-  constructor() {
-    addIcons({ business });
-  }
-
-  private isJwt(token: string | null | undefined): token is string {
-    if (!token) return false;
-    return token.split('.').length === 3;
-  }
-
-  private extractToken(data: any): string | null {
-    const loginData = data as unknown as {
-      token?: string;
-      session?: { token?: string; access_token?: string; accessToken?: string };
-    };
-    const token =
-      loginData?.token ||
-      loginData?.session?.token ||
-      loginData?.session?.access_token ||
-      loginData?.session?.accessToken ||
-      null;
-    return this.isJwt(token) ? token : null;
-  }
-
   async signup() {
-    this.errorMessage = '';
+    this.errorMessage = "";
 
-    if (!this.name || !this.email || !this.password || !this.confirmPassword) {
-      this.errorMessage = 'Please fill in all fields';
-      return;
-    }
-
-    if (this.password !== this.confirmPassword) {
-      this.errorMessage = 'Passwords do not match';
+    if (!this.name || !this.email || !this.password) {
+      this.errorMessage = "Please fill in all fields";
       return;
     }
 
@@ -199,70 +216,17 @@ export class SignupPage {
       });
 
       if (error) {
-        this.errorMessage = this.getErrorMessage(error);
+        this.errorMessage = error.message || "Signup failed";
         return;
       }
 
       if (data?.user) {
-        // Auto-login after signup
-        const loginResult = await authClient.signIn.email({
-          email: this.email,
-          password: this.password,
-        });
-
-        if (loginResult.data?.user) {
-          const neonUser = loginResult.data.user as any;
-
-          // Extract JWT token (critical for iOS Safari)
-          let accessToken = this.extractToken(loginResult.data);
-
-          if (!accessToken) {
-            try {
-              const authWithJwt = authClient as unknown as {
-                getJWTToken?: () => Promise<string | null>;
-              };
-              const jwt = await authWithJwt.getJWTToken?.();
-              if (this.isJwt(jwt)) accessToken = jwt;
-            } catch {}
-          }
-
-          if (!accessToken) {
-            try {
-              const { data: sessionData } = await authClient.getSession();
-              accessToken = this.extractToken(sessionData);
-            } catch {}
-          }
-
-          this.authService.setSession(
-            {
-              id: neonUser?.id || loginResult.data.user.id,
-              name: neonUser?.name || this.name,
-              email: neonUser?.email || this.email,
-              role: neonUser?.role,
-            },
-            accessToken
-          );
-
-          this.router.navigate(['/dashboard'], { replaceUrl: true });
-        }
+        this.router.navigate(["/login"], { replaceUrl: true });
       }
     } catch (err: any) {
-      this.errorMessage = err.message || 'Connection error. Please try again.';
+      this.errorMessage = err.message || "Connection error. Please try again.";
     } finally {
       this.isLoading = false;
     }
-  }
-
-  private getErrorMessage(error: any): string {
-    if (error.code === 'USER_ALREADY_EXISTS' || error.message?.includes('already exists')) {
-      return 'This email is already registered';
-    }
-    if (error.code === 'INVALID_EMAIL' || error.message?.includes('invalid email')) {
-      return 'Invalid email address';
-    }
-    if (error.code === 'WEAK_PASSWORD' || error.message?.includes('password')) {
-      return 'Password is too weak';
-    }
-    return error.message || 'Registration failed';
   }
 }
