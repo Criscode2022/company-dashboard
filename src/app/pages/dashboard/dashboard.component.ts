@@ -1,6 +1,20 @@
 import { CommonModule } from "@angular/common";
 import { Component, OnInit } from "@angular/core";
 import { RouterModule } from "@angular/router";
+import { addIcons } from "ionicons";
+import {
+  business,
+  folder,
+  checkmarkCircle,
+  cash,
+  notifications,
+  add,
+  create,
+  gitBranch,
+  moon,
+  star,
+  rocket,
+} from "ionicons/icons";
 import {
   IonBadge,
   IonButton,
@@ -190,7 +204,22 @@ export class DashboardComponent implements OnInit {
   constructor(
     private db: DatabaseService,
     private activityService: ActivityService
-  ) {}
+  ) {
+    // Register all icons used in the dashboard
+    addIcons({
+      business,
+      folder,
+      checkmarkCircle,
+      cash,
+      notifications,
+      add,
+      create,
+      gitBranch,
+      moon,
+      star,
+      rocket,
+    });
+  }
 
   async ngOnInit() {
     await this.loadData();
